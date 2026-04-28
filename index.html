@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -44,11 +45,14 @@
   .fee-l { font-size: 13px; color: #666; }
   .fee-v { font-size: 16px; font-weight: 600; color: #E67817; }
   .rnote { font-size: 13px; color: #791F1F; background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #F7C1C1; margin-bottom: 10px; line-height: 1.5; }
-  .mlink { display: block; width: 100%; padding: 9px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; font-size: 13px; text-decoration: none; transition: background 0.15s; }
+  .mlink { display: block; width: 100%; padding: 9px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; font-size: 13px; text-decoration: none; transition: background 0.15s; margin-bottom: 8px; }
   .mlink:hover { background: #f5f5f5; }
+  .btn-saida { display: block; width: 100%; padding: 11px; text-align: center; border: none; border-radius: 8px; background: #E67817; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 4px; }
+  .btn-saida:hover { opacity: 0.88; }
+  .btn-saida:disabled { opacity: 0.45; cursor: not-allowed; }
   .loading { text-align: center; padding: 1.5rem; color: #888; font-size: 14px; }
   .err { color: #A32D2D; font-size: 13px; padding: 10px 12px; background: #FCEBEB; border-radius: 8px; }
-  .hist { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; }
+  .hist { margin-top: 6px; }
   .htitle { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
   .hitem { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
   .hitem:last-child { border-bottom: none; }
@@ -57,6 +61,35 @@
   .hdot.no { background: #E24B4A; }
   .haddr { flex: 1; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hts { color: #888; font-size: 11px; }
+  .section-divider { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
+  .section-title { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .section-title .count-badge { background: #E67817; color: #fff; font-size: 11px; border-radius: 20px; padding: 1px 8px; }
+  .delivery-card { border: 1px solid #eee; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fff; transition: box-shadow 0.15s; }
+  .delivery-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .dc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .dc-addr { font-size: 13px; font-weight: 600; color: #1a1a1a; flex: 1; padding-right: 8px; }
+  .dc-status { font-size: 11px; border-radius: 20px; padding: 2px 9px; white-space: nowrap; font-weight: 600; }
+  .status-em-curso { background: #FFF3E0; color: #E67817; border: 1px solid #F7C785; }
+  .status-entregue { background: #eaf3de; color: #3B6D11; border: 1px solid #C0DD97; }
+  .dc-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .dc-meta-item { font-size: 11px; }
+  .dc-meta-label { color: #888; margin-bottom: 1px; }
+  .dc-meta-val { font-weight: 600; color: #1a1a1a; font-size: 12px; }
+  .dc-desvio-pos { color: #A32D2D; }
+  .dc-desvio-neg { color: #3B6D11; }
+  .dc-desvio-zero { color: #888; }
+  .btn-chegada { width: 100%; padding: 9px; border: none; border-radius: 8px; background: #3B6D11; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-chegada:hover { opacity: 0.88; }
+  .btn-chegada:disabled { opacity: 0.45; cursor: not-allowed; }
+  .summary-box { background: #f9f9f9; border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .summary-item { text-align: center; }
+  .summary-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .summary-val { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+  .summary-val.orange { color: #E67817; }
+  .empty-state { text-align: center; padding: 1.5rem 1rem; color: #bbb; font-size: 13px; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -86,10 +119,20 @@
 
   <div id="rarea"></div>
   <div id="harea"></div>
+
+  <hr class="section-divider">
+  <div class="section-title">
+    🛵 Entregas do dia
+    <span class="count-badge" id="count-badge">0</span>
+  </div>
+  <div id="deliveries-area"><div class="empty-state">Nenhuma entrega registada hoje</div></div>
+  <div id="summary-area"></div>
 </div>
 
 <script>
 const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjViMmMwYTBlNDJjNTQ3NjI4MTI0ODYwNTYwODVjYTM2IiwiaCI6Im11cm11cjY0In0=';
+const GKEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkOFV8zsCSq8BhUQ50F1SA2nZK79OVTBFcIXQqDEz6f3hcVQlWSaAbzvWElIn_7nhY/exec';
 
 const STORES = [
   {
@@ -118,10 +161,13 @@ const STORES = [
   }
 ];
 
-let cur = 0, hist = [];
+let cur = 0, hist = [], deliveries = [];
 
 function toMin(t){ const [h,m]=t.split(':'); return +h*60+ +m; }
 function isOpen(s){ const n=new Date(), d=n.getDay(); if(s.closedDays.includes(d)) return false; const hm=n.getHours()*60+n.getMinutes(); return (hm>=toMin(s.lunch[0])&&hm<=toMin(s.lunch[1]))||(hm>=toMin(s.dinner[0])&&hm<=toMin(s.dinner[1])); }
+function nowISO(){ return new Date().toISOString(); }
+function nowHM(){ return new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 function renderCard(){
   const s=STORES[cur], op=isOpen(s);
@@ -136,8 +182,6 @@ function sel(i){
   document.getElementById('ain').value='';
 }
 
-const GKEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
-
 async function geocode(query){
   const q = encodeURIComponent(query + (query.toLowerCase().includes('portugal') ? '' : ', Portugal'));
   const target = `https://maps.googleapis.com/maps/api/geocode/json?address=${q}&region=pt&key=${GKEY}`;
@@ -146,11 +190,7 @@ async function geocode(query){
   const d = await r.json();
   if(d.status !== 'OK' || !d.results.length) return null;
   const res = d.results[0];
-  return {
-    lat: res.geometry.location.lat,
-    lng: res.geometry.location.lng,
-    label: res.formatted_address
-  };
+  return { lat: res.geometry.location.lat, lng: res.geometry.location.lng, label: res.formatted_address };
 }
 
 async function getRoute(fromLng, fromLat, toLng, toLat){
@@ -158,20 +198,12 @@ async function getRoute(fromLng, fromLat, toLng, toLat){
   const url = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
   const r = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': ORS_KEY
-    },
-    body: JSON.stringify({
-      coordinates: [[fromLng, fromLat], [toLng, toLat]]
-    })
+    headers: { 'Content-Type': 'application/json', 'Authorization': ORS_KEY },
+    body: JSON.stringify({ coordinates: [[fromLng, fromLat], [toLng, toLat]] })
   });
   const d = await r.json();
   if(!d.routes || d.routes.length === 0) return null;
-  return {
-    distM: d.routes[0].summary.distance,
-    durSec: d.routes[0].summary.duration
-  };
+  return { distM: d.routes[0].summary.distance, durSec: d.routes[0].summary.duration };
 }
 
 async function go(){
@@ -183,47 +215,42 @@ async function go(){
 
   try {
     const store = STORES[cur];
-    const query = input + (input.toLowerCase().includes('portugal') ? '' : ', Portugal');
-
-    const dest = await geocode(query);
+    const dest = await geocode(input);
     if(!dest){
       document.getElementById('rarea').innerHTML='<div class="err">Morada não encontrada. Tente incluir a localidade (ex: 2775-200 Cascais).</div>';
       btn.disabled=false; return;
     }
-
     const route = await getRoute(store.lng, store.lat, dest.lng, dest.lat);
     if(!route){
       document.getElementById('rarea').innerHTML='<div class="err">Não foi possível calcular a rota. Tente novamente.</div>';
       btn.disabled=false; return;
     }
-
     const distKm = (route.distM / 1000).toFixed(1);
     const durOW = Math.ceil(route.durSec / 60);
     const durRT = durOW * 2;
     const ok = durRT <= 20;
-
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(store.addrFull)}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
-
-    const ts = new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-    hist.unshift({addr: dest.label.split(',').slice(0,2).join(','), ok, ts});
+    const ts = nowHM();
+    hist.unshift({ addr: dest.label.split(',').slice(0,2).join(','), ok, ts });
     if(hist.length > 6) hist.pop();
-
-    renderResult(dest.label, distKm, durOW, durRT, ok, mapsUrl);
+    renderResult(dest, distKm, durOW, durRT, ok, mapsUrl, store);
     renderHist();
-
   } catch(e){
     document.getElementById('rarea').innerHTML='<div class="err">Erro de ligação. Verifique a internet e tente novamente.</div>';
   }
   btn.disabled = false;
 }
 
-function renderResult(addr, dist, ow, rt, ok, murl){
+function renderResult(dest, dist, ow, rt, ok, murl, store){
   const fee = ok ? `<div class="fee-row"><span class="fee-l">Taxa de entrega (IVA incl.)</span><span class="fee-v">2,50 €</span></div>` : '';
   const note = ok ? '' : `<div class="rnote">Informar o cliente: "Lamentamos, mas a sua morada está fora da nossa zona de entrega. Pode recolher na loja ou encomendar via plataforma."</div>`;
+  const moradaEsc = dest.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const murlEsc = murl.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const saidaBtn = ok ? `<button class="btn-saida" id="btn-saida-main" onclick="registarSaida(this,'${moradaEsc}',${ow},'${store.name}','${murlEsc}')">🛵 Saí para entrega</button>` : '';
   document.getElementById('rarea').innerHTML=`
     <div class="result ${ok?'r-ok':'r-no'}">
       <div class="r-title">${ok?'✓ Entrega aceite':'✕ Fora do raio de entrega'}</div>
-      <div class="r-sub">${addr}</div>
+      <div class="r-sub">${dest.label}</div>
       <div class="stats">
         <div class="stat"><div class="slabel">Distância</div><div class="sval">${dist} km</div></div>
         <div class="stat"><div class="slabel">Ida</div><div class="sval">${ow} min</div></div>
@@ -231,15 +258,141 @@ function renderResult(addr, dist, ow, rt, ok, murl){
       </div>
       ${fee}${note}
       <a class="mlink" href="${murl}" target="_blank">Ver rota no Google Maps ↗</a>
+      ${saidaBtn}
+    </div>`;
+}
+
+async function registarSaida(btn, morada, estimado, loja, murl){
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>A registar...';
+  const id = uid();
+  const hora_saida = nowISO();
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saida', id, loja, morada, estimado, hora_saida })
+    });
+  } catch(e){}
+  deliveries.unshift({ id, loja, morada, estimado, hora_saida, hora_chegada: null, real: null, murl });
+  saveLocal();
+  renderDeliveries();
+  const btnEl = document.getElementById('btn-saida-main');
+  if(btnEl) btnEl.outerHTML = `<div style="text-align:center;font-size:13px;color:#3B6D11;font-weight:600;padding:8px 0;">✓ Saída registada às ${nowHM()}</div>`;
+}
+
+async function registarChegada(id, btn){
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>A registar...';
+  const hora_chegada = nowISO();
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'chegada', id, hora_chegada })
+    });
+  } catch(e){}
+  const d = deliveries.find(x => x.id === id);
+  if(d){
+    d.hora_chegada = hora_chegada;
+    const saida = new Date(d.hora_saida);
+    const chegada = new Date(hora_chegada);
+    d.real = Math.round((chegada - saida) / 60000);
+  }
+  saveLocal();
+  renderDeliveries();
+}
+
+function saveLocal(){
+  try { localStorage.setItem('ogr_deliveries', JSON.stringify(deliveries)); } catch(e){}
+}
+
+function loadLocal(){
+  try {
+    const raw = localStorage.getItem('ogr_deliveries');
+    if(!raw) return;
+    const all = JSON.parse(raw);
+    const hoje = new Date().toDateString();
+    deliveries = all.filter(d => new Date(d.hora_saida).toDateString() === hoje);
+  } catch(e){}
+}
+
+function renderDeliveries(){
+  const area = document.getElementById('deliveries-area');
+  const badge = document.getElementById('count-badge');
+  badge.textContent = deliveries.length;
+  if(!deliveries.length){
+    area.innerHTML = '<div class="empty-state">Nenhuma entrega registada hoje</div>';
+    document.getElementById('summary-area').innerHTML = '';
+    return;
+  }
+  area.innerHTML = deliveries.map(d => {
+    const emCurso = !d.hora_chegada;
+    const horaSaida = new Date(d.hora_saida).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+    const horaChegada = d.hora_chegada ? new Date(d.hora_chegada).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : '—';
+    let desvioHtml = '';
+    if(d.real !== null){
+      const dev = d.real - d.estimado;
+      const cls = dev > 0 ? 'dc-desvio-pos' : dev < 0 ? 'dc-desvio-neg' : 'dc-desvio-zero';
+      const sign = dev > 0 ? '+' : '';
+      desvioHtml = `<span class="${cls}">${sign}${dev} min</span>`;
+    } else {
+      desvioHtml = '<span style="color:#bbb">—</span>';
+    }
+    const chegadaBtn = emCurso ? `<button class="btn-chegada" onclick="registarChegada('${d.id}', this)">✓ Entregue — registar chegada</button>` : '';
+    const enderecoShort = d.morada.split(',').slice(0,2).join(',');
+    return `
+      <div class="delivery-card">
+        <div class="dc-header">
+          <div class="dc-addr">${enderecoShort}</div>
+          <div class="dc-status ${emCurso ? 'status-em-curso' : 'status-entregue'}">${emCurso ? 'Em curso' : 'Entregue'}</div>
+        </div>
+        <div class="dc-meta">
+          <div class="dc-meta-item"><div class="dc-meta-label">Saída</div><div class="dc-meta-val">${horaSaida}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Chegada</div><div class="dc-meta-val">${horaChegada}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Estimado</div><div class="dc-meta-val">${d.estimado} min</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Real</div><div class="dc-meta-val">${d.real !== null ? d.real + ' min' : '—'}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Desvio</div><div class="dc-meta-val">${desvioHtml}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Loja</div><div class="dc-meta-val" style="font-size:11px">${d.loja}</div></div>
+        </div>
+        ${chegadaBtn}
+      </div>`;
+  }).join('');
+  renderSummary();
+}
+
+function renderSummary(){
+  const concluidas = deliveries.filter(d => d.real !== null);
+  if(!concluidas.length){ document.getElementById('summary-area').innerHTML=''; return; }
+  const mediaReal = Math.round(concluidas.reduce((s,d)=>s+d.real,0) / concluidas.length);
+  const mediaEst = Math.round(concluidas.reduce((s,d)=>s+d.estimado,0) / concluidas.length);
+  const mediaDesvio = Math.round(concluidas.reduce((s,d)=>s+(d.real-d.estimado),0) / concluidas.length);
+  const desvioSign = mediaDesvio > 0 ? '+' : '';
+  const desvioColor = mediaDesvio > 2 ? '#A32D2D' : mediaDesvio < -1 ? '#3B6D11' : '#888';
+  document.getElementById('summary-area').innerHTML = `
+    <div class="summary-box">
+      <div class="htitle" style="margin-bottom:10px">Resumo do dia — ${concluidas.length} entrega${concluidas.length>1?'s':''} concluída${concluidas.length>1?'s':''}</div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="summary-label">Média estimada</div><div class="summary-val">${mediaEst} min</div></div>
+        <div class="summary-item"><div class="summary-label">Média real</div><div class="summary-val orange">${mediaReal} min</div></div>
+        <div class="summary-item"><div class="summary-label">Desvio médio</div><div class="summary-val" style="color:${desvioColor}">${desvioSign}${mediaDesvio} min</div></div>
+      </div>
     </div>`;
 }
 
 function renderHist(){
   if(!hist.length){ document.getElementById('harea').innerHTML=''; return; }
-  document.getElementById('harea').innerHTML=`<div class="hist"><div class="htitle">Consultas de hoje</div>${hist.map(h=>`<div class="hitem"><div class="hdot ${h.ok?'ok':'no'}"></div><div class="haddr">${h.addr}</div><div class="hts">${h.ts}</div></div>`).join('')}</div>`;
+  document.getElementById('harea').innerHTML=`<div class="hist" style="margin-bottom:0.5rem"><div class="htitle">Consultas recentes</div>${hist.map(h=>`<div class="hitem"><div class="hdot ${h.ok?'ok':'no'}"></div><div class="haddr">${h.addr}</div><div class="hts">${h.ts}</div></div>`).join('')}</div>`;
 }
 
+loadLocal();
 renderCard();
+renderDeliveries();
 </script>
 </body>
 </html>
+```
+
+Substitui o conteúdo do `index.html` no GitHub por este e confirma quando estiver publicado para testar.
