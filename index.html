@@ -148,15 +148,23 @@ async function geocode(query){
 }
 
 async function getRoute(fromLng, fromLat, toLng, toLat){
-  const target = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${fromLng},${fromLat}&end=${toLng},${toLat}`;
+  const target = `https://api.openrouteservice.org/v2/directions/driving-car`;
   const url = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
-  const r = await fetch(url);
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': ORS_KEY
+    },
+    body: JSON.stringify({
+      coordinates: [[fromLng, fromLat], [toLng, toLat]]
+    })
+  });
   const d = await r.json();
-  if(!d.features || d.features.length === 0) return null;
-  const seg = d.features[0].properties.segments[0];
+  if(!d.routes || d.routes.length === 0) return null;
   return {
-    distM: seg.distance,
-    durSec: seg.duration
+    distM: d.routes[0].summary.distance,
+    durSec: d.routes[0].summary.duration
   };
 }
 
