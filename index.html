@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validador de Entregas – Os Grelhados dos Reis</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 1.5rem 1rem; }
+  .app { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .header { text-align: center; margin-bottom: 1.5rem; }
+  .logo-bar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .brand { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+  .subtitle { font-size: 12px; color: #888; }
+  .store-tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+  .tab { flex: 1; padding: 9px 4px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 12px; color: #888; cursor: pointer; text-align: center; line-height: 1.3; transition: all 0.15s; }
+  .tab.active { border: 2px solid #E67817; color: #E67817; font-weight: 600; }
+  .tab:hover:not(.active) { background: #f9f9f9; }
+  .scard { background: #f9f9f9; border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; font-size: 12px; color: #666; line-height: 1.7; }
+  .scard strong { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 11px; margin-left: 6px; }
+  .open { background: #eaf3de; color: #3B6D11; }
+  .closed { background: #FCEBEB; color: #A32D2D; }
+  .field-label { font-size: 13px; color: #666; margin-bottom: 6px; display: block; }
+  .input-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+  .addr { flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; color: #1a1a1a; outline: none; }
+  .addr:focus { border-color: #E67817; box-shadow: 0 0 0 2px rgba(230,120,23,0.15); }
+  .btn { padding: 10px 16px; background: #E67817; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.88; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .result { border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+  .r-ok { background: #eaf3de; border: 1px solid #C0DD97; }
+  .r-no { background: #FCEBEB; border: 1px solid #F7C1C1; }
+  .r-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .r-ok .r-title { color: #3B6D11; }
+  .r-no .r-title { color: #A32D2D; }
+  .r-sub { font-size: 12px; color: #666; margin-bottom: 12px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .stat { background: #fff; border-radius: 8px; padding: 9px 10px; border: 1px solid #eee; }
+  .slabel { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .sval { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+  .fee-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 8px; padding: 9px 12px; border: 1px solid #eee; margin-bottom: 10px; }
+  .fee-l { font-size: 13px; color: #666; }
+  .fee-v { font-size: 16px; font-weight: 600; color: #E67817; }
+  .rnote { font-size: 13px; color: #791F1F; background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #F7C1C1; margin-bottom: 10px; line-height: 1.5; }
+  .mlink { display: block; width: 100%; padding: 9px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; font-size: 13px; text-decoration: none; transition: background 0.15s; }
+  .mlink:hover { background: #f5f5f5; }
+  .loading { text-align: center; padding: 1.5rem; color: #888; font-size: 14px; }
+  .err { color: #A32D2D; font-size: 13px; padding: 10px 12px; background: #FCEBEB; border-radius: 8px; }
+  .hist { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; }
+  .htitle { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .hitem { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+  .hitem:last-child { border-bottom: none; }
+  .hdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .hdot.ok { background: #639922; }
+  .hdot.no { background: #E24B4A; }
+  .haddr { flex: 1; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hts { color: #888; font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo-bar">
+      <span class="dot" style="background:#DA251C"></span>
+      <span class="brand">Os Grelhados dos Reis</span>
+      <span class="dot" style="background:#E67817"></span>
+    </div>
+    <div class="subtitle">Validador de entregas</div>
+  </div>
+
+  <div class="store-tabs">
+    <div class="tab active" onclick="sel(0)">Parede</div>
+    <div class="tab" onclick="sel(1)">Carcavelos</div>
+    <div class="tab" onclick="sel(2)">S. D. Rana</div>
+  </div>
+
+  <div class="scard" id="scard"></div>
+
+  <label class="field-label">Morada ou código postal do cliente</label>
+  <div class="input-row">
+    <input class="addr" id="ain" placeholder="Ex: 2765-086 ou Rua das Flores 12, Cascais" onkeydown="if(event.key==='Enter')go()"/>
+    <button class="btn" id="gbtn" onclick="go()">Verificar</button>
+  </div>
+
+  <div id="rarea"></div>
+  <div id="harea"></div>
+</div>
+
+<script>
+const KEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
+
+const STORES = [
+  { name:'Parede', lat:38.6976, lng:-9.3558, addr:'Largo José Fontana 66, 2775-086 Parede, Cascais', schedule:'Seg-Sáb: 11:00-14:30 / 18:00-21:30 · Dom: Encerrado', closedDays:[0], lunch:['11:00','14:30'], dinner:['18:00','21:30'] },
+  { name:'Carcavelos', lat:38.6857, lng:-9.3282, addr:'Av. de São Miguel 296, Loja F, 2775-750 Carcavelos', schedule:'Seg-Sex: 11:00-14:00 / 17:30-21:00 · Sáb: 11:00-14:30 · Dom: Encerrado', closedDays:[0], lunch:['11:00','14:00'], dinner:['17:30','21:00'] },
+  { name:'S. Domingos de Rana', lat:38.7014, lng:-9.3012, addr:'Praça de Azurite 380 A, 2785-812 S. Domingos de Rana', schedule:'Ter-Sex: 11:00-14:00 / 18:00-21:00 · Seg/Sáb/Dom: Encerrado', closedDays:[0,1,6], lunch:['11:00','14:00'], dinner:['18:00','21:00'] }
+];
+
+let cur=0, hist=[];
+
+function toMin(t){ const [h,m]=t.split(':'); return +h*60+ +m; }
+function isOpen(s){ const n=new Date(),d=n.getDay(); if(s.closedDays.includes(d)) return false; const hm=n.getHours()*60+n.getMinutes(); return (hm>=toMin(s.lunch[0])&&hm<=toMin(s.lunch[1]))||(hm>=toMin(s.dinner[0])&&hm<=toMin(s.dinner[1])); }
+
+function renderCard(){
+  const s=STORES[cur], op=isOpen(s);
+  document.getElementById('scard').innerHTML=`<strong>${s.name}</strong><span class="badge ${op?'open':'closed'}">${op?'Aberto':'Fechado'}</span><br>${s.addr}<br><span style="font-size:11px">${s.schedule}</span>`;
+}
+
+function sel(i){
+  cur=i;
+  document.querySelectorAll('.tab').forEach((t,idx)=>t.className='tab'+(idx===i?' active':''));
+  renderCard();
+  document.getElementById('rarea').innerHTML='';
+  document.getElementById('ain').value='';
+}
+
+async function go(){
+  const input=document.getElementById('ain').value.trim();
+  if(!input) return;
+  const btn=document.getElementById('gbtn');
+  btn.disabled=true;
+  document.getElementById('rarea').innerHTML='<div class="loading">A calcular rota...</div>';
+
+  try {
+    const query=encodeURIComponent(input+(input.toLowerCase().includes('portugal')?'':', Portugal'));
+    const geoResp=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${query}&region=pt&key=${KEY}`);
+    const geoData=await geoResp.json();
+
+    if(geoData.status!=='OK'||!geoData.results.length){
+      document.getElementById('rarea').innerHTML='<div class="err">Morada não encontrada. Tente incluir a localidade (ex: 2765-086 Estoril).</div>';
+      btn.disabled=false; return;
+    }
+
+    const loc=geoData.results[0].geometry.location;
+    const destAddr=geoData.results[0].formatted_address;
+    const store=STORES[cur];
+
+    const R=6371;
+    const dLat=(loc.lat-store.lat)*Math.PI/180;
+    const dLng=(loc.lng-store.lng)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(store.lat*Math.PI/180)*Math.cos(loc.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    const distKm=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    const durOW=Math.ceil((distKm/30)*60);
+    const durRT=durOW*2;
+    const ok=durRT<=20;
+
+    const mapsUrl=`https://www.google.com/maps/dir/?api=1&origin=${store.lat},${store.lng}&destination=${loc.lat},${loc.lng}&travelmode=driving`;
+    const ts=new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+    hist.unshift({addr:destAddr.split(',').slice(0,2).join(','), ok, ts});
+    if(hist.length>6) hist.pop();
+
+    renderResult(destAddr, distKm.toFixed(1), durOW, durRT, ok, mapsUrl);
+    renderHist();
+  } catch(e){
+    document.getElementById('rarea').innerHTML='<div class="err">Erro de ligação. Verifique a internet e tente novamente.</div>';
+  }
+  btn.disabled=false;
+}
+
+function renderResult(addr, dist, ow, rt, ok, murl){
+  const fee=ok?`<div class="fee-row"><span class="fee-l">Taxa de entrega (IVA incl.)</span><span class="fee-v">2,50 €</span></div>`:'';
+  const note=ok?'':`<div class="rnote">Informar o cliente: "Lamentamos, mas a sua morada está fora da nossa zona de entrega. Pode recolher na loja ou encomendar via plataforma."</div>`;
+  document.getElementById('rarea').innerHTML=`
+    <div class="result ${ok?'r-ok':'r-no'}">
+      <div class="r-title">${ok?'✓ Entrega aceite':'✕ Fora do raio de entrega'}</div>
+      <div class="r-sub">${addr}</div>
+      <div class="stats">
+        <div class="stat"><div class="slabel">Distância</div><div class="sval">${dist} km</div></div>
+        <div class="stat"><div class="slabel">Ida</div><div class="sval">${ow} min</div></div>
+        <div class="stat"><div class="slabel">Ida+volta</div><div class="sval" style="color:${ok?'#3B6D11':'#A32D2D'}">${rt} min</div></div>
+      </div>
+      ${fee}${note}
+      <a class="mlink" href="${murl}" target="_blank">Ver rota no Google Maps ↗</a>
+    </div>`;
+}
+
+function renderHist(){
+  if(!hist.length){ document.getElementById('harea').innerHTML=''; return; }
+  document.getElementById('harea').innerHTML=`<div class="hist"><div class="htitle">Consultas de hoje</div>${hist.map(h=>`<div class="hitem"><div class="hdot ${h.ok?'ok':'no'}"></div><div class="haddr">${h.addr}</div><div class="hts">${h.ts}</div></div>`).join('')}</div>`;
+}
+
+renderCard();
+</script>
+</body>
+</html>
