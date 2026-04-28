@@ -89,12 +89,11 @@
 </div>
 
 <script>
-const KEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
+const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjViMmMwYTBlNDJjNTQ3NjI4MTI0ODYwNTYwODVjYTM2IiwiaCI6Im11cm11cjY0In0=';
 
 const STORES = [
   {
     name: 'Parede',
-    addr: 'Largo José Fontana 66, 2775-086 Parede, Cascais, Portugal',
     addrShort: 'Largo José Fontana 66, Parede',
     lat: 38.6976, lng: -9.3558,
     schedule: 'Seg-Sáb: 11:00-14:30 / 18:00-21:30 · Dom: Encerrado',
@@ -102,7 +101,6 @@ const STORES = [
   },
   {
     name: 'Carcavelos',
-    addr: 'Avenida de São Miguel 296, 2775-750 Carcavelos, Cascais, Portugal',
     addrShort: 'Av. de São Miguel 296, Carcavelos',
     lat: 38.6857, lng: -9.3282,
     schedule: 'Seg-Sex: 11:00-14:00 / 17:30-21:00 · Sáb: 11:00-14:30 · Dom: Encerrado',
@@ -110,7 +108,6 @@ const STORES = [
   },
   {
     name: 'S. Domingos de Rana',
-    addr: 'Praça de Azurite 380 A, 2785-812 São Domingos de Rana, Cascais, Portugal',
     addrShort: 'Praça de Azurite 380A, S. D. Rana',
     lat: 38.7014, lng: -9.3012,
     schedule: 'Ter-Sex: 11:00-14:00 / 18:00-21:00 · Seg/Sáb/Dom: Encerrado',
@@ -136,6 +133,31 @@ function sel(i){
   document.getElementById('ain').value='';
 }
 
+async function geocode(query){
+  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(query)}&boundary.country=PT&size=1`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if(!d.features || d.features.length === 0) return null;
+  const f = d.features[0];
+  return {
+    lat: f.geometry.coordinates[1],
+    lng: f.geometry.coordinates[0],
+    label: f.properties.label
+  };
+}
+
+async function getRoute(fromLng, fromLat, toLng, toLat){
+  const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${fromLng},${fromLat}&end=${toLng},${toLat}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if(!d.features || d.features.length === 0) return null;
+  const seg = d.features[0].properties.segments[0];
+  return {
+    distM: seg.distance,
+    durSec: seg.duration
+  };
+}
+
 async function go(){
   const input = document.getElementById('ain').value.trim();
   if(!input) return;
@@ -145,36 +167,32 @@ async function go(){
 
   try {
     const store = STORES[cur];
-    const dest = encodeURIComponent(input + (input.toLowerCase().includes('portugal') ? '' : ', Portugal'));
-    const orig = encodeURIComponent(store.addr);
+    const query = input + (input.toLowerCase().includes('portugal') ? '' : ', Portugal');
 
-    // Distance Matrix API — tempo real de condução
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${orig}&destinations=${dest}&mode=driving&language=pt&region=pt&key=${KEY}`;
-    const resp = await fetch(url);
-    const data = await resp.json();
-
-    if(data.status !== 'OK' || !data.rows[0]?.elements[0] || data.rows[0].elements[0].status !== 'OK'){
+    const dest = await geocode(query);
+    if(!dest){
       document.getElementById('rarea').innerHTML='<div class="err">Morada não encontrada. Tente incluir a localidade (ex: 2775-200 Cascais).</div>';
       btn.disabled=false; return;
     }
 
-    const el = data.rows[0].elements[0];
-    const distKm = (el.distance.value / 1000).toFixed(1);
-    const durOW = Math.ceil(el.duration.value / 60);
+    const route = await getRoute(store.lng, store.lat, dest.lng, dest.lat);
+    if(!route){
+      document.getElementById('rarea').innerHTML='<div class="err">Não foi possível calcular a rota. Tente novamente.</div>';
+      btn.disabled=false; return;
+    }
+
+    const distKm = (route.distM / 1000).toFixed(1);
+    const durOW = Math.ceil(route.durSec / 60);
     const durRT = durOW * 2;
     const ok = durRT <= 20;
 
-    const destAddr = data.destination_addresses[0];
-    const origAddr = data.origin_addresses[0];
-
-    // Link Google Maps com ponto de partida correcto
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origAddr)}&destination=${encodeURIComponent(destAddr)}&travelmode=driving`;
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${store.lat},${store.lng}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
 
     const ts = new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-    hist.unshift({addr: destAddr.split(',').slice(0,2).join(','), ok, ts});
+    hist.unshift({addr: dest.label.split(',').slice(0,2).join(','), ok, ts});
     if(hist.length > 6) hist.pop();
 
-    renderResult(destAddr, distKm, durOW, durRT, ok, mapsUrl);
+    renderResult(dest.label, distKm, durOW, durRT, ok, mapsUrl);
     renderHist();
 
   } catch(e){
