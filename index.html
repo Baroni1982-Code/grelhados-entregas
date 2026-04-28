@@ -134,7 +134,8 @@ function sel(i){
 }
 
 async function geocode(query){
-  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(query)}&boundary.country=PT&size=1`;
+  const target = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(query)}&boundary.country=PT&size=1`;
+  const url = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
   const r = await fetch(url);
   const d = await r.json();
   if(!d.features || d.features.length === 0) return null;
@@ -147,7 +148,8 @@ async function geocode(query){
 }
 
 async function getRoute(fromLng, fromLat, toLng, toLat){
-  const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${fromLng},${fromLat}&end=${toLng},${toLat}`;
+  const target = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${fromLng},${fromLat}&end=${toLng},${toLat}`;
+  const url = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
   const r = await fetch(url);
   const d = await r.json();
   if(!d.features || d.features.length === 0) return null;
