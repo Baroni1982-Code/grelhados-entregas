@@ -77,6 +77,7 @@
   .dc-desvio-pos { color: #A32D2D; }
   .dc-desvio-neg { color: #3B6D11; }
   .dc-desvio-zero { color: #888; }
+  .dc-desvio-tol { color: #888; }
   .btn-chegada { width: 100%; padding: 9px; border: none; border-radius: 8px; background: #3B6D11; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
   .btn-chegada:hover { opacity: 0.88; }
   .btn-chegada:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -133,6 +134,10 @@ const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjViMmMwYTB
 const GKEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkOFV8zsCSq8BhUQ50F1SA2nZK79OVTBFcIXQqDEz6f3hcVQlWSaAbzvWElIn_7nhY/exec';
 
+// Constantes de negócio
+const ATENDIMENTO_MIN = 2;   // tempo padrão de entrega à porta
+const TOLERANCIA_MIN  = 5;   // margem máxima aceitável de atraso
+
 const STORES = [
   {
     name: 'Parede',
@@ -167,6 +172,10 @@ function isOpen(s){ const n=new Date(), d=n.getDay(); if(s.closedDays.includes(d
 function nowISO(){ return new Date().toISOString(); }
 function nowHM(){ return new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// Fórmula central de negócio:
+// Serviço esperado = (ida × 2) + atendimento
+function servicoEsperado(ida){ return (ida * 2) + ATENDIMENTO_MIN; }
 
 function renderCard(){
   const s=STORES[cur], op=isOpen(s);
@@ -211,7 +220,6 @@ async function go(){
   const btn = document.getElementById('gbtn');
   btn.disabled = true;
   document.getElementById('rarea').innerHTML='<div class="loading">A calcular rota em tempo real...</div>';
-
   try {
     const store = STORES[cur];
     const dest = await geocode(input);
@@ -261,20 +269,21 @@ function renderResult(dest, dist, ow, rt, ok, murl, store){
     </div>`;
 }
 
-async function registarSaida(btn, morada, estimado, loja, murl){
+async function registarSaida(btn, morada, ida, loja, murl){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>A registar...';
   const id = uid();
   const hora_saida = nowISO();
+  const esperado = servicoEsperado(ida); // (ida × 2) + 2 min atendimento
   try {
     await fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saida', id, loja, morada, estimado, hora_saida })
+      body: JSON.stringify({ action: 'saida', id, loja, morada, ida, esperado, hora_saida })
     });
   } catch(e){}
-  deliveries.unshift({ id, loja, morada, estimado, hora_saida, hora_chegada: null, real: null, murl });
+  deliveries.unshift({ id, loja, morada, ida, esperado, hora_saida, hora_chegada: null, real: null, murl });
   saveLocal();
   renderDeliveries();
   const btnEl = document.getElementById('btn-saida-main');
@@ -331,30 +340,40 @@ function renderDeliveries(){
     const emCurso = !d.hora_chegada;
     const horaSaida = new Date(d.hora_saida).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
     const horaChegada = d.hora_chegada ? new Date(d.hora_chegada).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : '—';
-    let desvioHtml = '';
+
+    // Desvio = real - esperado (ida×2 + atendimento)
+    let desvioHtml = '<span style="color:#bbb">—</span>';
+    let statusDesvio = '';
     if(d.real !== null){
-      const dev = d.real - d.estimado;
-      const cls = dev > 0 ? 'dc-desvio-pos' : dev < 0 ? 'dc-desvio-neg' : 'dc-desvio-zero';
+      const dev = d.real - d.esperado;
       const sign = dev > 0 ? '+' : '';
-      desvioHtml = `<span class="${cls}">${sign}${dev} min</span>`;
-    } else {
-      desvioHtml = '<span style="color:#bbb">—</span>';
+      let cls, label;
+      if(dev <= 0){
+        cls = 'dc-desvio-neg'; label = `${sign}${dev} min ✓`;
+      } else if(dev <= TOLERANCIA_MIN){
+        cls = 'dc-desvio-tol'; label = `+${dev} min (tolerância)`;
+      } else {
+        cls = 'dc-desvio-pos'; label = `+${dev} min ⚠`;
+      }
+      desvioHtml = `<span class="${cls}">${label}</span>`;
     }
-    const chegadaBtn = emCurso ? `<button class="btn-chegada" onclick="registarChegada('${d.id}', this)">✓ Entregue — registar chegada</button>` : '';
+
+    const chegadaBtn = emCurso ? `<button class="btn-chegada" onclick="registarChegada('${d.id}', this)">✓ Regressei à loja</button>` : '';
     const enderecoShort = d.morada.split(',').slice(0,2).join(',');
+
     return `
       <div class="delivery-card">
         <div class="dc-header">
           <div class="dc-addr">${enderecoShort}</div>
-          <div class="dc-status ${emCurso ? 'status-em-curso' : 'status-entregue'}">${emCurso ? 'Em curso' : 'Entregue'}</div>
+          <div class="dc-status ${emCurso ? 'status-em-curso' : 'status-entregue'}">${emCurso ? 'Em curso' : 'Concluída'}</div>
         </div>
         <div class="dc-meta">
           <div class="dc-meta-item"><div class="dc-meta-label">Saída</div><div class="dc-meta-val">${horaSaida}</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Chegada</div><div class="dc-meta-val">${horaChegada}</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Estimado</div><div class="dc-meta-val">${d.estimado} min</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Real</div><div class="dc-meta-val">${d.real !== null ? d.real + ' min' : '—'}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Regresso</div><div class="dc-meta-val">${horaChegada}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Ida (ORS)</div><div class="dc-meta-val">${d.ida} min</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Serviço esperado</div><div class="dc-meta-val">${d.esperado} min</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Real (total)</div><div class="dc-meta-val">${d.real !== null ? d.real + ' min' : '—'}</div></div>
           <div class="dc-meta-item"><div class="dc-meta-label">Desvio</div><div class="dc-meta-val">${desvioHtml}</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Loja</div><div class="dc-meta-val" style="font-size:11px">${d.loja}</div></div>
         </div>
         ${chegadaBtn}
       </div>`;
@@ -365,18 +384,24 @@ function renderDeliveries(){
 function renderSummary(){
   const concluidas = deliveries.filter(d => d.real !== null);
   if(!concluidas.length){ document.getElementById('summary-area').innerHTML=''; return; }
+
   const mediaReal = Math.round(concluidas.reduce((s,d)=>s+d.real,0) / concluidas.length);
-  const mediaEst = Math.round(concluidas.reduce((s,d)=>s+d.estimado,0) / concluidas.length);
-  const mediaDesvio = Math.round(concluidas.reduce((s,d)=>s+(d.real-d.estimado),0) / concluidas.length);
-  const desvioSign = mediaDesvio > 0 ? '+' : '';
-  const desvioColor = mediaDesvio > 2 ? '#A32D2D' : mediaDesvio < -1 ? '#3B6D11' : '#888';
+  const mediaEsp  = Math.round(concluidas.reduce((s,d)=>s+d.esperado,0) / concluidas.length);
+  const mediaDesvio = Math.round(concluidas.reduce((s,d)=>s+(d.real-d.esperado),0) / concluidas.length);
+  const dentroTol = concluidas.filter(d => (d.real - d.esperado) <= TOLERANCIA_MIN).length;
+  const sign = mediaDesvio > 0 ? '+' : '';
+  const desvioColor = mediaDesvio > TOLERANCIA_MIN ? '#A32D2D' : mediaDesvio <= 0 ? '#3B6D11' : '#888';
+
   document.getElementById('summary-area').innerHTML = `
     <div class="summary-box">
       <div class="htitle" style="margin-bottom:10px">Resumo do dia — ${concluidas.length} entrega${concluidas.length>1?'s':''} concluída${concluidas.length>1?'s':''}</div>
       <div class="summary-grid">
-        <div class="summary-item"><div class="summary-label">Média estimada</div><div class="summary-val">${mediaEst} min</div></div>
-        <div class="summary-item"><div class="summary-label">Média real</div><div class="summary-val orange">${mediaReal} min</div></div>
-        <div class="summary-item"><div class="summary-label">Desvio médio</div><div class="summary-val" style="color:${desvioColor}">${desvioSign}${mediaDesvio} min</div></div>
+        <div class="summary-item"><div class="summary-label">Serviço esperado médio</div><div class="summary-val">${mediaEsp} min</div></div>
+        <div class="summary-item"><div class="summary-label">Tempo real médio</div><div class="summary-val orange">${mediaReal} min</div></div>
+        <div class="summary-item"><div class="summary-label">Desvio médio</div><div class="summary-val" style="color:${desvioColor}">${sign}${mediaDesvio} min</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#666;text-align:center;">
+        ${dentroTol} de ${concluidas.length} dentro da tolerância (≤ +${TOLERANCIA_MIN} min)
       </div>
     </div>`;
 }
