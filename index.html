@@ -40,7 +40,7 @@
   .stat { background: #fff; border-radius: 8px; padding: 9px 10px; border: 1px solid #eee; }
   .slabel { font-size: 11px; color: #888; margin-bottom: 2px; }
   .sval { font-size: 16px; font-weight: 600; color: #1a1a1a; }
-  .fee-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 8px; padding: 9px 12px; border: 1px solid #eee; margin-bottom: 10px; }
+  .fee-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 8px; padding: 9px 12px; border: 1px solid #eee; margin-bottom: 8px; }
   .fee-l { font-size: 13px; color: #666; }
   .fee-v { font-size: 16px; font-weight: 600; color: #E67817; }
   .rnote { font-size: 13px; color: #791F1F; background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #F7C1C1; margin-bottom: 10px; line-height: 1.5; }
@@ -160,7 +160,6 @@ const GKEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkOFV8zsCSq8BhUQ50F1SA2nZK79OVTBFcIXQqDEz6f3hcVQlWSaAbzvWElIn_7nhY/exec';
 
 // Serviço esperado = (ida × 2) + 5 min
-// Desvio > 0 = atrasado (vermelho), Desvio ≤ 0 = dentro do esperado (verde)
 const SERVICO_EXTRA = 5;
 
 const STORES = [
@@ -247,7 +246,9 @@ async function go(){
 }
 
 function renderResult(dest,dist,ow,rt,ok,murl,store){
+  const esp=servicoEsperado(ow);
   const fee=ok?`<div class="fee-row"><span class="fee-l">Taxa de entrega (IVA incl.)</span><span class="fee-v">2,50 €</span></div>`:'';
+  const servicoRow=ok?`<div class="fee-row"><span class="fee-l">⏱ Serviço esperado <span style="font-size:11px;color:#aaa">(ida×2 + 5 min)</span></span><span class="fee-v" style="color:#1a1a1a">${esp} min</span></div>`:'';
   const note=ok?'':`<div class="rnote">Informar o cliente: "Lamentamos, mas a sua morada está fora da nossa zona de entrega. Pode recolher na loja ou encomendar via plataforma."</div>`;
   const moradaEsc=dest.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const murlEsc=murl.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -261,7 +262,7 @@ function renderResult(dest,dist,ow,rt,ok,murl,store){
         <div class="stat"><div class="slabel">Ida</div><div class="sval">${ow} min</div></div>
         <div class="stat"><div class="slabel">Ida + volta</div><div class="sval" style="color:${ok?'#3B6D11':'#A32D2D'}">${rt} min</div></div>
       </div>
-      ${fee}${note}
+      ${fee}${servicoRow}${note}
       <a class="mlink" href="${murl}" target="_blank">Ver rota no Google Maps ↗</a>
       ${saidaBtn}
     </div>`;
@@ -306,7 +307,14 @@ function loadLocal(){
     if(!raw) return;
     const all=JSON.parse(raw);
     const hoje=new Date().toDateString();
-    deliveries=all.filter(d=>d.hora_saida&&d.esperado&&new Date(d.hora_saida).toDateString()===hoje);
+    // Filtra só hoje E com fórmula correcta (esperado = ida×2+5)
+    deliveries=all.filter(d=>{
+      if(!d.hora_saida || !d.ida) return false;
+      if(new Date(d.hora_saida).toDateString()!==hoje) return false;
+      // Recalcula esperado com fórmula actual para corrigir registos antigos
+      d.esperado = servicoEsperado(d.ida);
+      return true;
+    });
   } catch(e){}
 }
 
@@ -323,21 +331,16 @@ function renderDeliveries(){
     const horaSaida=new Date(d.hora_saida).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
     const horaChegada=d.hora_chegada?new Date(d.hora_chegada).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}):'—';
     const dataEntrega=dataFormatada(d.hora_saida);
-
     let desvioHtml='<span style="color:#bbb">—</span>';
     if(d.real!==null){
       const dev=d.real-d.esperado;
       const sign=dev>0?'+':'';
-      if(dev<=0){
-        desvioHtml=`<span class="dc-desvio-neg">${sign}${dev} min ✓</span>`;
-      } else {
-        desvioHtml=`<span class="dc-desvio-pos">+${dev} min ⚠</span>`;
-      }
+      desvioHtml=dev<=0
+        ?`<span class="dc-desvio-neg">${sign}${dev} min ✓</span>`
+        :`<span class="dc-desvio-pos">+${dev} min ⚠</span>`;
     }
-
     const chegadaBtn=emCurso?`<button class="btn-chegada" onclick="registarChegada('${d.id}',this)">✓ Regressei à loja</button>`:'';
     const enderecoShort=d.morada.split(',').slice(0,2).join(',');
-
     return `
       <div class="delivery-card">
         <div class="dc-header">
