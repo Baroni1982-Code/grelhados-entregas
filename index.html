@@ -61,13 +61,17 @@
   .haddr { flex: 1; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hts { color: #888; font-size: 11px; }
   .section-divider { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
-  .section-title { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .section-title { font-size: 13px; font-weight: 600; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
   .section-title .count-badge { background: #E67817; color: #fff; font-size: 11px; border-radius: 20px; padding: 1px 8px; }
+  .btn-reset { padding: 5px 12px; border: 1px solid #ddd; border-radius: 20px; background: #fff; color: #888; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-reset:hover { border-color: #A32D2D; color: #A32D2D; }
   .delivery-card { border: 1px solid #eee; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fff; transition: box-shadow 0.15s; }
   .delivery-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-  .dc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .dc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
   .dc-addr { font-size: 13px; font-weight: 600; color: #1a1a1a; flex: 1; padding-right: 8px; }
   .dc-status { font-size: 11px; border-radius: 20px; padding: 2px 9px; white-space: nowrap; font-weight: 600; }
+  .dc-date { font-size: 11px; color: #aaa; margin-bottom: 8px; }
   .status-em-curso { background: #FFF3E0; color: #E67817; border: 1px solid #F7C785; }
   .status-entregue { background: #eaf3de; color: #3B6D11; border: 1px solid #C0DD97; }
   .dc-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
@@ -76,8 +80,6 @@
   .dc-meta-val { font-weight: 600; color: #1a1a1a; font-size: 12px; }
   .dc-desvio-pos { color: #A32D2D; }
   .dc-desvio-neg { color: #3B6D11; }
-  .dc-desvio-zero { color: #888; }
-  .dc-desvio-tol { color: #888; }
   .btn-chegada { width: 100%; padding: 9px; border: none; border-radius: 8px; background: #3B6D11; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
   .btn-chegada:hover { opacity: 0.88; }
   .btn-chegada:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -90,6 +92,15 @@
   .empty-state { text-align: center; padding: 1.5rem 1rem; color: #bbb; font-size: 13px; }
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 320px; text-align: center; }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: #666; margin-bottom: 1.25rem; line-height: 1.5; }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-cancelar { background: #f5f5f5; color: #666; }
+  .btn-confirmar { background: #A32D2D; color: #fff; }
 </style>
 </head>
 <body>
@@ -121,12 +132,26 @@
   <div id="harea"></div>
 
   <hr class="section-divider">
-  <div class="section-title">
-    🛵 Entregas do dia
-    <span class="count-badge" id="count-badge">0</span>
+  <div class="section-header">
+    <div class="section-title">
+      🛵 Entregas do dia
+      <span class="count-badge" id="count-badge">0</span>
+    </div>
+    <button class="btn-reset" onclick="confirmarReset()">↺ Novo dia</button>
   </div>
   <div id="deliveries-area"><div class="empty-state">Nenhuma entrega registada hoje</div></div>
   <div id="summary-area"></div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Iniciar novo dia?</h3>
+    <p>Todos os registos actuais serão apagados da app. Os dados já gravados na Google Sheet mantêm-se.</p>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-confirmar" onclick="resetDia()">Confirmar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -134,35 +159,14 @@ const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjViMmMwYTB
 const GKEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkOFV8zsCSq8BhUQ50F1SA2nZK79OVTBFcIXQqDEz6f3hcVQlWSaAbzvWElIn_7nhY/exec';
 
-// Constantes de negócio
-const ATENDIMENTO_MIN = 2;   // tempo padrão de entrega à porta
-const TOLERANCIA_MIN  = 5;   // margem máxima aceitável de atraso
+// Serviço esperado = (ida × 2) + 5 min
+// Desvio > 0 = atrasado (vermelho), Desvio ≤ 0 = dentro do esperado (verde)
+const SERVICO_EXTRA = 5;
 
 const STORES = [
-  {
-    name: 'Parede',
-    addrShort: 'Largo José Fontana 66, Parede',
-    addrFull: 'Largo José Fontana 66, 2775-086 Parede, Cascais, Portugal',
-    lat: 38.692863, lng: -9.354782,
-    schedule: 'Seg-Sáb: 11:00-14:30 / 18:00-21:30 · Dom: Encerrado',
-    closedDays: [0], lunch: ['11:00','14:30'], dinner: ['18:00','21:30']
-  },
-  {
-    name: 'Carcavelos',
-    addrShort: 'Av. de São Miguel 296, Carcavelos',
-    addrFull: 'Avenida de São Miguel 296, 2775-751 Carcavelos, Cascais, Portugal',
-    lat: 38.7020161, lng: -9.3350118,
-    schedule: 'Seg-Sex: 11:00-14:00 / 17:30-21:00 · Sáb: 11:00-14:30 · Dom: Encerrado',
-    closedDays: [0], lunch: ['11:00','14:00'], dinner: ['17:30','21:00']
-  },
-  {
-    name: 'S. Domingos de Rana',
-    addrShort: 'Praça de Azurite 380A, S. D. Rana',
-    addrFull: 'Praça de Azurite 380, 2785-812 São Domingos de Rana, Cascais, Portugal',
-    lat: 38.7106936, lng: -9.3277964,
-    schedule: 'Ter-Sex: 11:00-14:00 / 18:00-21:00 · Seg/Sáb/Dom: Encerrado',
-    closedDays: [0,1,6], lunch: ['11:00','14:00'], dinner: ['18:00','21:00']
-  }
+  { name:'Parede', addrShort:'Largo José Fontana 66, Parede', addrFull:'Largo José Fontana 66, 2775-086 Parede, Cascais, Portugal', lat:38.692863, lng:-9.354782, schedule:'Seg-Sáb: 11:00-14:30 / 18:00-21:30 · Dom: Encerrado', closedDays:[0], lunch:['11:00','14:30'], dinner:['18:00','21:30'] },
+  { name:'Carcavelos', addrShort:'Av. de São Miguel 296, Carcavelos', addrFull:'Avenida de São Miguel 296, 2775-751 Carcavelos, Cascais, Portugal', lat:38.7020161, lng:-9.3350118, schedule:'Seg-Sex: 11:00-14:00 / 17:30-21:00 · Sáb: 11:00-14:30 · Dom: Encerrado', closedDays:[0], lunch:['11:00','14:00'], dinner:['17:30','21:00'] },
+  { name:'S. Domingos de Rana', addrShort:'Praça de Azurite 380A, S. D. Rana', addrFull:'Praça de Azurite 380, 2785-812 São Domingos de Rana, Cascais, Portugal', lat:38.7106936, lng:-9.3277964, schedule:'Ter-Sex: 11:00-14:00 / 18:00-21:00 · Seg/Sáb/Dom: Encerrado', closedDays:[0,1,6], lunch:['11:00','14:00'], dinner:['18:00','21:00'] }
 ];
 
 let cur = 0, hist = [], deliveries = [];
@@ -172,16 +176,25 @@ function isOpen(s){ const n=new Date(), d=n.getDay(); if(s.closedDays.includes(d
 function nowISO(){ return new Date().toISOString(); }
 function nowHM(){ return new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function servicoEsperado(ida){ return (ida * 2) + SERVICO_EXTRA; }
+function dataFormatada(iso){ return new Date(iso).toLocaleDateString('pt-PT',{weekday:'short',day:'2-digit',month:'2-digit'}); }
 
-// Fórmula central de negócio:
-// Serviço esperado = (ida × 2) + atendimento
-function servicoEsperado(ida){ return (ida * 2) + ATENDIMENTO_MIN; }
+function confirmarReset(){ document.getElementById('modal').classList.add('active'); }
+function fecharModal(){ document.getElementById('modal').classList.remove('active'); }
+function resetDia(){
+  deliveries=[]; hist=[];
+  saveLocal();
+  fecharModal();
+  document.getElementById('rarea').innerHTML='';
+  document.getElementById('harea').innerHTML='';
+  document.getElementById('ain').value='';
+  renderDeliveries();
+}
 
 function renderCard(){
   const s=STORES[cur], op=isOpen(s);
   document.getElementById('scard').innerHTML=`<strong>${s.name}</strong><span class="badge ${op?'open':'closed'}">${op?'Aberto':'Fechado'}</span><br>${s.addrShort}<br><span style="font-size:11px">${s.schedule}</span>`;
 }
-
 function sel(i){
   cur=i;
   document.querySelectorAll('.tab').forEach((t,idx)=>t.className='tab'+(idx===i?' active':''));
@@ -191,69 +204,54 @@ function sel(i){
 }
 
 async function geocode(query){
-  const q = encodeURIComponent(query + (query.toLowerCase().includes('portugal') ? '' : ', Portugal'));
-  const target = `https://maps.googleapis.com/maps/api/geocode/json?address=${q}&region=pt&key=${GKEY}`;
-  const url = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
-  const r = await fetch(url);
-  const d = await r.json();
-  if(d.status !== 'OK' || !d.results.length) return null;
-  const res = d.results[0];
-  return { lat: res.geometry.location.lat, lng: res.geometry.location.lng, label: res.formatted_address };
+  const q=encodeURIComponent(query+(query.toLowerCase().includes('portugal')?'':', Portugal'));
+  const url=`https://corsproxy.io/?url=${encodeURIComponent('https://maps.googleapis.com/maps/api/geocode/json?address='+q+'&region=pt&key='+GKEY)}`;
+  const r=await fetch(url); const d=await r.json();
+  if(d.status!=='OK'||!d.results.length) return null;
+  const res=d.results[0];
+  return {lat:res.geometry.location.lat,lng:res.geometry.location.lng,label:res.formatted_address};
 }
-
-async function getRoute(fromLng, fromLat, toLng, toLat){
-  const target = `https://api.openrouteservice.org/v2/directions/driving-car`;
-  const url = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': ORS_KEY },
-    body: JSON.stringify({ coordinates: [[fromLng, fromLat], [toLng, toLat]] })
-  });
-  const d = await r.json();
-  if(!d.routes || d.routes.length === 0) return null;
-  return { distM: d.routes[0].summary.distance, durSec: d.routes[0].summary.duration };
+async function getRoute(fromLng,fromLat,toLng,toLat){
+  const url=`https://corsproxy.io/?url=${encodeURIComponent('https://api.openrouteservice.org/v2/directions/driving-car')}`;
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':ORS_KEY},body:JSON.stringify({coordinates:[[fromLng,fromLat],[toLng,toLat]]})});
+  const d=await r.json();
+  if(!d.routes||!d.routes.length) return null;
+  return {distM:d.routes[0].summary.distance,durSec:d.routes[0].summary.duration};
 }
 
 async function go(){
-  const input = document.getElementById('ain').value.trim();
+  const input=document.getElementById('ain').value.trim();
   if(!input) return;
-  const btn = document.getElementById('gbtn');
-  btn.disabled = true;
+  const btn=document.getElementById('gbtn');
+  btn.disabled=true;
   document.getElementById('rarea').innerHTML='<div class="loading">A calcular rota em tempo real...</div>';
   try {
-    const store = STORES[cur];
-    const dest = await geocode(input);
-    if(!dest){
-      document.getElementById('rarea').innerHTML='<div class="err">Morada não encontrada. Tente incluir a localidade (ex: 2775-200 Cascais).</div>';
-      btn.disabled=false; return;
-    }
-    const route = await getRoute(store.lng, store.lat, dest.lng, dest.lat);
-    if(!route){
-      document.getElementById('rarea').innerHTML='<div class="err">Não foi possível calcular a rota. Tente novamente.</div>';
-      btn.disabled=false; return;
-    }
-    const distKm = (route.distM / 1000).toFixed(1);
-    const durOW = Math.ceil(route.durSec / 60);
-    const durRT = durOW * 2;
-    const ok = durRT <= 20;
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(store.addrFull)}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
-    const ts = nowHM();
-    hist.unshift({ addr: dest.label.split(',').slice(0,2).join(','), ok, ts });
-    if(hist.length > 6) hist.pop();
-    renderResult(dest, distKm, durOW, durRT, ok, mapsUrl, store);
+    const store=STORES[cur];
+    const dest=await geocode(input);
+    if(!dest){ document.getElementById('rarea').innerHTML='<div class="err">Morada não encontrada. Tente incluir a localidade.</div>'; btn.disabled=false; return; }
+    const route=await getRoute(store.lng,store.lat,dest.lng,dest.lat);
+    if(!route){ document.getElementById('rarea').innerHTML='<div class="err">Não foi possível calcular a rota. Tente novamente.</div>'; btn.disabled=false; return; }
+    const distKm=(route.distM/1000).toFixed(1);
+    const durOW=Math.ceil(route.durSec/60);
+    const durRT=durOW*2;
+    const ok=durRT<=20;
+    const mapsUrl=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(store.addrFull)}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
+    hist.unshift({addr:dest.label.split(',').slice(0,2).join(','),ok,ts:nowHM()});
+    if(hist.length>6) hist.pop();
+    renderResult(dest,distKm,durOW,durRT,ok,mapsUrl,store);
     renderHist();
   } catch(e){
     document.getElementById('rarea').innerHTML='<div class="err">Erro de ligação. Verifique a internet e tente novamente.</div>';
   }
-  btn.disabled = false;
+  btn.disabled=false;
 }
 
-function renderResult(dest, dist, ow, rt, ok, murl, store){
-  const fee = ok ? `<div class="fee-row"><span class="fee-l">Taxa de entrega (IVA incl.)</span><span class="fee-v">2,50 €</span></div>` : '';
-  const note = ok ? '' : `<div class="rnote">Informar o cliente: "Lamentamos, mas a sua morada está fora da nossa zona de entrega. Pode recolher na loja ou encomendar via plataforma."</div>`;
-  const moradaEsc = dest.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const murlEsc = murl.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const saidaBtn = ok ? `<button class="btn-saida" id="btn-saida-main" onclick="registarSaida(this,'${moradaEsc}',${ow},'${store.name}','${murlEsc}')">🛵 Saí para entrega</button>` : '';
+function renderResult(dest,dist,ow,rt,ok,murl,store){
+  const fee=ok?`<div class="fee-row"><span class="fee-l">Taxa de entrega (IVA incl.)</span><span class="fee-v">2,50 €</span></div>`:'';
+  const note=ok?'':`<div class="rnote">Informar o cliente: "Lamentamos, mas a sua morada está fora da nossa zona de entrega. Pode recolher na loja ou encomendar via plataforma."</div>`;
+  const moradaEsc=dest.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const murlEsc=murl.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const saidaBtn=ok?`<button class="btn-saida" id="btn-saida-main" onclick="registarSaida(this,'${moradaEsc}',${ow},'${store.name}','${murlEsc}')">🛵 Saí para entrega</button>`:'';
   document.getElementById('rarea').innerHTML=`
     <div class="result ${ok?'r-ok':'r-no'}">
       <div class="r-title">${ok?'✓ Entrega aceite':'✕ Fora do raio de entrega'}</div>
@@ -269,110 +267,90 @@ function renderResult(dest, dist, ow, rt, ok, murl, store){
     </div>`;
 }
 
-async function registarSaida(btn, morada, ida, loja, murl){
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>A registar...';
-  const id = uid();
-  const hora_saida = nowISO();
-  const esperado = servicoEsperado(ida); // (ida × 2) + 2 min atendimento
+async function registarSaida(btn,morada,ida,loja,murl){
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>A registar...';
+  const id=uid(), hora_saida=nowISO(), esperado=servicoEsperado(ida);
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saida', id, loja, morada, ida, esperado, hora_saida })
-    });
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'saida',id,loja,morada,ida,esperado,hora_saida})});
   } catch(e){}
-  deliveries.unshift({ id, loja, morada, ida, esperado, hora_saida, hora_chegada: null, real: null, murl });
+  deliveries.unshift({id,loja,morada,ida,esperado,hora_saida,hora_chegada:null,real:null,murl});
   saveLocal();
   renderDeliveries();
-  const btnEl = document.getElementById('btn-saida-main');
-  if(btnEl) btnEl.outerHTML = `<div style="text-align:center;font-size:13px;color:#3B6D11;font-weight:600;padding:8px 0;">✓ Saída registada às ${nowHM()}</div>`;
+  const btnEl=document.getElementById('btn-saida-main');
+  if(btnEl) btnEl.outerHTML=`<div style="text-align:center;font-size:13px;color:#3B6D11;font-weight:600;padding:8px 0;">✓ Saída registada às ${nowHM()}</div>`;
 }
 
-async function registarChegada(id, btn){
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>A registar...';
-  const hora_chegada = nowISO();
+async function registarChegada(id,btn){
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>A registar...';
+  const hora_chegada=nowISO();
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'chegada', id, hora_chegada })
-    });
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'chegada',id,hora_chegada})});
   } catch(e){}
-  const d = deliveries.find(x => x.id === id);
+  const d=deliveries.find(x=>x.id===id);
   if(d){
-    d.hora_chegada = hora_chegada;
-    const saida = new Date(d.hora_saida);
-    const chegada = new Date(hora_chegada);
-    d.real = Math.round((chegada - saida) / 60000);
+    d.hora_chegada=hora_chegada;
+    d.real=Math.round((new Date(hora_chegada)-new Date(d.hora_saida))/60000);
   }
   saveLocal();
   renderDeliveries();
 }
 
 function saveLocal(){
-  try { localStorage.setItem('ogr_deliveries', JSON.stringify(deliveries)); } catch(e){}
+  try { localStorage.setItem('ogr_deliveries',JSON.stringify(deliveries)); } catch(e){}
 }
-
 function loadLocal(){
   try {
-    const raw = localStorage.getItem('ogr_deliveries');
+    const raw=localStorage.getItem('ogr_deliveries');
     if(!raw) return;
-    const all = JSON.parse(raw);
-    const hoje = new Date().toDateString();
-    deliveries = all.filter(d => new Date(d.hora_saida).toDateString() === hoje);
+    const all=JSON.parse(raw);
+    const hoje=new Date().toDateString();
+    deliveries=all.filter(d=>d.hora_saida&&d.esperado&&new Date(d.hora_saida).toDateString()===hoje);
   } catch(e){}
 }
 
 function renderDeliveries(){
-  const area = document.getElementById('deliveries-area');
-  const badge = document.getElementById('count-badge');
-  badge.textContent = deliveries.length;
+  const area=document.getElementById('deliveries-area');
+  document.getElementById('count-badge').textContent=deliveries.length;
   if(!deliveries.length){
-    area.innerHTML = '<div class="empty-state">Nenhuma entrega registada hoje</div>';
-    document.getElementById('summary-area').innerHTML = '';
+    area.innerHTML='<div class="empty-state">Nenhuma entrega registada hoje</div>';
+    document.getElementById('summary-area').innerHTML='';
     return;
   }
-  area.innerHTML = deliveries.map(d => {
-    const emCurso = !d.hora_chegada;
-    const horaSaida = new Date(d.hora_saida).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-    const horaChegada = d.hora_chegada ? new Date(d.hora_chegada).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : '—';
+  area.innerHTML=deliveries.map(d=>{
+    const emCurso=!d.hora_chegada;
+    const horaSaida=new Date(d.hora_saida).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+    const horaChegada=d.hora_chegada?new Date(d.hora_chegada).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}):'—';
+    const dataEntrega=dataFormatada(d.hora_saida);
 
-    // Desvio = real - esperado (ida×2 + atendimento)
-    let desvioHtml = '<span style="color:#bbb">—</span>';
-    let statusDesvio = '';
-    if(d.real !== null){
-      const dev = d.real - d.esperado;
-      const sign = dev > 0 ? '+' : '';
-      let cls, label;
-      if(dev <= 0){
-        cls = 'dc-desvio-neg'; label = `${sign}${dev} min ✓`;
-      } else if(dev <= TOLERANCIA_MIN){
-        cls = 'dc-desvio-tol'; label = `+${dev} min (tolerância)`;
+    let desvioHtml='<span style="color:#bbb">—</span>';
+    if(d.real!==null){
+      const dev=d.real-d.esperado;
+      const sign=dev>0?'+':'';
+      if(dev<=0){
+        desvioHtml=`<span class="dc-desvio-neg">${sign}${dev} min ✓</span>`;
       } else {
-        cls = 'dc-desvio-pos'; label = `+${dev} min ⚠`;
+        desvioHtml=`<span class="dc-desvio-pos">+${dev} min ⚠</span>`;
       }
-      desvioHtml = `<span class="${cls}">${label}</span>`;
     }
 
-    const chegadaBtn = emCurso ? `<button class="btn-chegada" onclick="registarChegada('${d.id}', this)">✓ Regressei à loja</button>` : '';
-    const enderecoShort = d.morada.split(',').slice(0,2).join(',');
+    const chegadaBtn=emCurso?`<button class="btn-chegada" onclick="registarChegada('${d.id}',this)">✓ Regressei à loja</button>`:'';
+    const enderecoShort=d.morada.split(',').slice(0,2).join(',');
 
     return `
       <div class="delivery-card">
         <div class="dc-header">
           <div class="dc-addr">${enderecoShort}</div>
-          <div class="dc-status ${emCurso ? 'status-em-curso' : 'status-entregue'}">${emCurso ? 'Em curso' : 'Concluída'}</div>
+          <div class="dc-status ${emCurso?'status-em-curso':'status-entregue'}">${emCurso?'Em curso':'Concluída'}</div>
         </div>
+        <div class="dc-date">📅 ${dataEntrega} · ${d.loja}</div>
         <div class="dc-meta">
           <div class="dc-meta-item"><div class="dc-meta-label">Saída</div><div class="dc-meta-val">${horaSaida}</div></div>
           <div class="dc-meta-item"><div class="dc-meta-label">Regresso</div><div class="dc-meta-val">${horaChegada}</div></div>
           <div class="dc-meta-item"><div class="dc-meta-label">Ida (ORS)</div><div class="dc-meta-val">${d.ida} min</div></div>
           <div class="dc-meta-item"><div class="dc-meta-label">Serviço esperado</div><div class="dc-meta-val">${d.esperado} min</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Real (total)</div><div class="dc-meta-val">${d.real !== null ? d.real + ' min' : '—'}</div></div>
+          <div class="dc-meta-item"><div class="dc-meta-label">Real (total)</div><div class="dc-meta-val">${d.real!==null?d.real+' min':'—'}</div></div>
           <div class="dc-meta-item"><div class="dc-meta-label">Desvio</div><div class="dc-meta-val">${desvioHtml}</div></div>
         </div>
         ${chegadaBtn}
@@ -382,26 +360,20 @@ function renderDeliveries(){
 }
 
 function renderSummary(){
-  const concluidas = deliveries.filter(d => d.real !== null);
+  const concluidas=deliveries.filter(d=>d.real!==null);
   if(!concluidas.length){ document.getElementById('summary-area').innerHTML=''; return; }
-
-  const mediaReal = Math.round(concluidas.reduce((s,d)=>s+d.real,0) / concluidas.length);
-  const mediaEsp  = Math.round(concluidas.reduce((s,d)=>s+d.esperado,0) / concluidas.length);
-  const mediaDesvio = Math.round(concluidas.reduce((s,d)=>s+(d.real-d.esperado),0) / concluidas.length);
-  const dentroTol = concluidas.filter(d => (d.real - d.esperado) <= TOLERANCIA_MIN).length;
-  const sign = mediaDesvio > 0 ? '+' : '';
-  const desvioColor = mediaDesvio > TOLERANCIA_MIN ? '#A32D2D' : mediaDesvio <= 0 ? '#3B6D11' : '#888';
-
-  document.getElementById('summary-area').innerHTML = `
+  const mediaReal=Math.round(concluidas.reduce((s,d)=>s+d.real,0)/concluidas.length);
+  const mediaEsp=Math.round(concluidas.reduce((s,d)=>s+d.esperado,0)/concluidas.length);
+  const mediaDesvio=Math.round(concluidas.reduce((s,d)=>s+(d.real-d.esperado),0)/concluidas.length);
+  const sign=mediaDesvio>0?'+':'';
+  const desvioColor=mediaDesvio>0?'#A32D2D':'#3B6D11';
+  document.getElementById('summary-area').innerHTML=`
     <div class="summary-box">
       <div class="htitle" style="margin-bottom:10px">Resumo do dia — ${concluidas.length} entrega${concluidas.length>1?'s':''} concluída${concluidas.length>1?'s':''}</div>
       <div class="summary-grid">
         <div class="summary-item"><div class="summary-label">Serviço esperado médio</div><div class="summary-val">${mediaEsp} min</div></div>
         <div class="summary-item"><div class="summary-label">Tempo real médio</div><div class="summary-val orange">${mediaReal} min</div></div>
         <div class="summary-item"><div class="summary-label">Desvio médio</div><div class="summary-val" style="color:${desvioColor}">${sign}${mediaDesvio} min</div></div>
-      </div>
-      <div style="margin-top:10px;font-size:12px;color:#666;text-align:center;">
-        ${dentroTol} de ${concluidas.length} dentro da tolerância (≤ +${TOLERANCIA_MIN} min)
       </div>
     </div>`;
 }
