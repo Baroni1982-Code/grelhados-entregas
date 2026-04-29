@@ -3,392 +3,1059 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Validador de Entregas – Os Grelhados dos Reis</title>
+<title>Entregas — Os Grelhados dos Reis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 1.5rem 1rem; }
-  .app { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-  .header { text-align: center; margin-bottom: 1.5rem; }
-  .logo-bar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
-  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
-  .brand { font-size: 16px; font-weight: 600; color: #1a1a1a; }
-  .subtitle { font-size: 12px; color: #888; }
-  .store-tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; }
-  .tab { flex: 1; padding: 9px 4px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 12px; color: #888; cursor: pointer; text-align: center; line-height: 1.3; transition: all 0.15s; }
-  .tab.active { border: 2px solid #E67817; color: #E67817; font-weight: 600; }
-  .tab:hover:not(.active) { background: #f9f9f9; }
-  .scard { background: #f9f9f9; border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; font-size: 12px; color: #666; line-height: 1.7; }
-  .scard strong { font-size: 13px; font-weight: 600; color: #1a1a1a; }
-  .badge { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 11px; margin-left: 6px; }
-  .open { background: #eaf3de; color: #3B6D11; }
-  .closed { background: #FCEBEB; color: #A32D2D; }
-  .field-label { font-size: 13px; color: #666; margin-bottom: 6px; display: block; }
-  .input-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
-  .addr { flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; color: #1a1a1a; outline: none; }
-  .addr:focus { border-color: #E67817; box-shadow: 0 0 0 2px rgba(230,120,23,0.15); }
-  .btn { padding: 10px 16px; background: #E67817; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
-  .btn:hover { opacity: 0.88; }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .result { border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-  .r-ok { background: #eaf3de; border: 1px solid #C0DD97; }
-  .r-no { background: #FCEBEB; border: 1px solid #F7C1C1; }
-  .r-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-  .r-ok .r-title { color: #3B6D11; }
-  .r-no .r-title { color: #A32D2D; }
-  .r-sub { font-size: 12px; color: #666; margin-bottom: 12px; }
-  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-  .stat { background: #fff; border-radius: 8px; padding: 9px 10px; border: 1px solid #eee; }
-  .slabel { font-size: 11px; color: #888; margin-bottom: 2px; }
-  .sval { font-size: 16px; font-weight: 600; color: #1a1a1a; }
-  .fee-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 8px; padding: 9px 12px; border: 1px solid #eee; margin-bottom: 8px; }
-  .fee-l { font-size: 13px; color: #666; }
-  .fee-v { font-size: 16px; font-weight: 600; color: #E67817; }
-  .rnote { font-size: 13px; color: #791F1F; background: #fff; border-radius: 8px; padding: 10px 12px; border: 1px solid #F7C1C1; margin-bottom: 10px; line-height: 1.5; }
-  .mlink { display: block; width: 100%; padding: 9px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; font-size: 13px; text-decoration: none; transition: background 0.15s; margin-bottom: 8px; }
-  .mlink:hover { background: #f5f5f5; }
-  .btn-saida { display: block; width: 100%; padding: 11px; text-align: center; border: none; border-radius: 8px; background: #E67817; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 4px; }
-  .btn-saida:hover { opacity: 0.88; }
-  .btn-saida:disabled { opacity: 0.45; cursor: not-allowed; }
-  .loading { text-align: center; padding: 1.5rem; color: #888; font-size: 14px; }
-  .err { color: #A32D2D; font-size: 13px; padding: 10px 12px; background: #FCEBEB; border-radius: 8px; }
-  .hist { margin-top: 6px; }
-  .htitle { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .hitem { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
-  .hitem:last-child { border-bottom: none; }
-  .hdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .hdot.ok { background: #639922; }
-  .hdot.no { background: #E24B4A; }
-  .haddr { flex: 1; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .hts { color: #888; font-size: 11px; }
-  .section-divider { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
-  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-  .section-title { font-size: 13px; font-weight: 600; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
-  .section-title .count-badge { background: #E67817; color: #fff; font-size: 11px; border-radius: 20px; padding: 1px 8px; }
-  .btn-reset { padding: 5px 12px; border: 1px solid #ddd; border-radius: 20px; background: #fff; color: #888; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-  .btn-reset:hover { border-color: #A32D2D; color: #A32D2D; }
-  .delivery-card { border: 1px solid #eee; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fff; transition: box-shadow 0.15s; }
-  .delivery-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-  .dc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-  .dc-addr { font-size: 13px; font-weight: 600; color: #1a1a1a; flex: 1; padding-right: 8px; }
-  .dc-status { font-size: 11px; border-radius: 20px; padding: 2px 9px; white-space: nowrap; font-weight: 600; }
-  .dc-date { font-size: 11px; color: #aaa; margin-bottom: 8px; }
-  .status-em-curso { background: #FFF3E0; color: #E67817; border: 1px solid #F7C785; }
-  .status-entregue { background: #eaf3de; color: #3B6D11; border: 1px solid #C0DD97; }
-  .dc-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-  .dc-meta-item { font-size: 11px; }
-  .dc-meta-label { color: #888; margin-bottom: 1px; }
-  .dc-meta-val { font-weight: 600; color: #1a1a1a; font-size: 12px; }
-  .dc-desvio-pos { color: #A32D2D; }
-  .dc-desvio-neg { color: #3B6D11; }
-  .btn-chegada { width: 100%; padding: 9px; border: none; border-radius: 8px; background: #3B6D11; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
-  .btn-chegada:hover { opacity: 0.88; }
-  .btn-chegada:disabled { opacity: 0.45; cursor: not-allowed; }
-  .summary-box { background: #f9f9f9; border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
-  .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  :root {
+    --brand-orange: #E67817;
+    --brand-red: #DA251C;
+    --brand-dark: #1A0A00;
+    --brand-char: #2D1400;
+    --brand-ember: #7A3000;
+    --surface-0: #0F0600;
+    --surface-1: #1C0C02;
+    --surface-2: #281304;
+    --surface-3: #341A08;
+    --text-primary: #FFF5EC;
+    --text-secondary: #C4926A;
+    --text-muted: #7A5A40;
+    --border: rgba(230,120,23,0.15);
+    --border-strong: rgba(230,120,23,0.3);
+    --success: #22C55E;
+    --danger: #DA251C;
+    --radius: 10px;
+    --transition: 180ms cubic-bezier(0.4,0,0.2,1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--brand-orange);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  .brand-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .brand-name span {
+    display: block;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .day-badge {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .btn-new-day {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    transition: all var(--transition);
+  }
+
+  .btn-new-day:hover {
+    border-color: var(--brand-orange);
+    color: var(--brand-orange);
+  }
+
+  /* ── STORE TABS ── */
+  .store-nav {
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 20px;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .store-nav::-webkit-scrollbar { display: none; }
+
+  .store-tab {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition);
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .store-tab.active {
+    color: var(--brand-orange);
+    border-bottom-color: var(--brand-orange);
+  }
+
+  .store-tab .store-status {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    margin-left: 6px;
+    vertical-align: middle;
+    margin-bottom: 1px;
+  }
+
+  .store-tab.open-store .store-status { background: var(--success); }
+  .store-tab.closed-store .store-status { background: var(--danger); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    padding: 20px;
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── STORE INFO BAR ── */
+  .store-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+
+  .store-info .status-pill {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .status-pill.open { background: rgba(34,197,94,0.15); color: #22C55E; }
+  .status-pill.closed { background: rgba(218,37,28,0.15); color: #DA251C; }
+
+  .store-info .address-text {
+    color: var(--text-secondary);
+    font-size: 12px;
+    flex: 1;
+  }
+
+  /* ── SEARCH PANEL ── */
+  .search-panel {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 16px 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .search-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px 14px;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-input:focus { border-color: var(--brand-orange); }
+
+  .btn-verify {
+    background: var(--brand-orange);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .btn-verify:hover:not(:disabled) { background: #f08820; }
+  .btn-verify:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: none;
+    animation: slide-in 220ms ease-out;
+  }
+
+  .result-card.visible { display: block; }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .result-card.accepted .result-header { background: rgba(34,197,94,0.12); }
+  .result-card.rejected .result-header { background: rgba(218,37,28,0.12); }
+
+  .result-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .result-card.accepted .result-icon { background: rgba(34,197,94,0.2); }
+  .result-card.rejected .result-icon { background: rgba(218,37,28,0.2); }
+
+  .result-verdict {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .result-card.accepted .result-verdict { color: var(--success); }
+  .result-card.rejected .result-verdict { color: var(--danger); }
+
+  .result-address {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+  }
+
+  .metric {
+    padding: 12px 16px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .metric:nth-child(2n) { border-right: none; }
+  .metric:nth-last-child(-n+2) { border-bottom: none; }
+
+  .metric-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .metric-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .metric-value.highlight { color: var(--brand-orange); }
+
+  .metric-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .result-footer {
+    padding: 12px 16px;
+    background: var(--surface-1);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-maps {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    transition: all var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-maps:hover { border-color: var(--brand-orange); color: var(--brand-orange); }
+
+  .btn-start-delivery {
+    margin-left: auto;
+    background: var(--brand-orange);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-start-delivery:hover:not(:disabled) { background: #f08820; }
+  .btn-start-delivery:disabled { opacity: 0.4; cursor: default; }
+
+  .rejected-msg {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #f87171;
+    background: rgba(218,37,28,0.08);
+    border-top: 1px solid rgba(218,37,28,0.15);
+  }
+
+  /* ── DELIVERIES LIST ── */
+  .deliveries-section {}
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .count-badge {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  /* ── SUMMARY ROW ── */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
   .summary-item { text-align: center; }
-  .summary-label { font-size: 11px; color: #888; margin-bottom: 2px; }
-  .summary-val { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-  .summary-val.orange { color: #E67817; }
-  .empty-state { text-align: center; padding: 1.5rem 1rem; color: #bbb; font-size: 13px; }
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  .summary-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+
+  .summary-num.positive { color: var(--success); }
+  .summary-num.negative { color: var(--danger); }
+
+  .summary-lbl {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  /* ── DELIVERY ITEM ── */
+  .delivery-item {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color var(--transition);
+  }
+
+  .delivery-item:hover { border-color: var(--border-strong); }
+
+  .delivery-top {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .delivery-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--text-muted);
+    min-width: 28px;
+  }
+
+  .delivery-info { flex: 1; min-width: 0; }
+
+  .delivery-addr {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .delivery-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .delivery-status {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .status-active { background: rgba(230,120,23,0.15); color: var(--brand-orange); }
+  .status-done { background: rgba(34,197,94,0.12); color: var(--success); }
+  .status-late { background: rgba(218,37,28,0.12); color: #f87171; }
+
+  .delivery-bottom {
+    padding: 8px 14px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-1);
+  }
+
+  .time-chip {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .time-chip svg { opacity: 0.5; }
+
+  .desvio-chip {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    margin-left: auto;
+  }
+
+  .desvio-ok { color: var(--success); }
+  .desvio-late { color: #f87171; }
+
+  .btn-return {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-secondary);
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .btn-return:hover { border-color: var(--success); color: var(--success); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-text {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+    display: none;
+  }
+
+  .modal-overlay.open { display: flex; animation: fade-in 150ms ease; }
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 360px;
+    width: 100%;
+    animation: modal-up 200ms ease-out;
+  }
+
+  @keyframes modal-up {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .modal-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 9px 16px;
+    border-radius: 7px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .btn-cancel:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+  .btn-confirm {
+    background: var(--brand-red);
+    border: none;
+    color: #fff;
+    padding: 9px 16px;
+    border-radius: 7px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .btn-confirm:hover { background: #e8291f; }
+
+  /* ── LOADER ── */
+  .loader {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 10px 16px 14px;
+  }
+
+  .loader.visible { display: flex; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--brand-orange);
+    border-radius: 50%;
+    animation: spin 600ms linear infinite;
+  }
+
   @keyframes spin { to { transform: rotate(360deg); } }
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
-  .modal-overlay.active { display: flex; }
-  .modal { background: #fff; border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 320px; text-align: center; }
-  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-  .modal p { font-size: 13px; color: #666; margin-bottom: 1.25rem; line-height: 1.5; }
-  .modal-btns { display: flex; gap: 8px; }
-  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-cancelar { background: #f5f5f5; color: #666; }
-  .btn-confirmar { background: #A32D2D; color: #fff; }
+
+  /* ── ERROR ── */
+  .error-msg {
+    display: none;
+    padding: 10px 16px 14px;
+    font-size: 12px;
+    color: #f87171;
+  }
+
+  .error-msg.visible { display: block; }
+
+  @media (max-width: 400px) {
+    main { padding: 14px; }
+    .store-tab { font-size: 13px; padding: 10px 14px; }
+  }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div class="logo-bar">
-      <span class="dot" style="background:#DA251C"></span>
-      <span class="brand">Os Grelhados dos Reis</span>
-      <span class="dot" style="background:#E67817"></span>
+
+<header>
+  <div class="brand-mark">GR</div>
+  <div class="brand-name">
+    Os Grelhados dos Reis
+    <span>Validador de Entregas</span>
+  </div>
+  <div class="header-right">
+    <span class="day-badge" id="dateBadge"></span>
+    <button class="btn-new-day" onclick="openNewDayModal()">↺ Novo dia</button>
+  </div>
+</header>
+
+<nav class="store-nav" id="storeNav"></nav>
+
+<main>
+  <div class="store-info" id="storeInfo"></div>
+
+  <div class="search-panel">
+    <div class="panel-header">Verificar entrega</div>
+    <div class="search-row">
+      <input
+        type="text"
+        class="search-input"
+        id="addressInput"
+        placeholder="Morada ou código postal do cliente"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') verify()"
+      />
+      <button class="btn-verify" id="btnVerify" onclick="verify()">Verificar</button>
     </div>
-    <div class="subtitle">Validador de entregas</div>
-  </div>
-
-  <div class="store-tabs">
-    <div class="tab active" onclick="sel(0)">Parede</div>
-    <div class="tab" onclick="sel(1)">Carcavelos</div>
-    <div class="tab" onclick="sel(2)">S. D. Rana</div>
-  </div>
-
-  <div class="scard" id="scard"></div>
-
-  <label class="field-label">Morada ou código postal do cliente</label>
-  <div class="input-row">
-    <input class="addr" id="ain" placeholder="Ex: 2765-086 ou Rua das Flores 12, Cascais" onkeydown="if(event.key==='Enter')go()"/>
-    <button class="btn" id="gbtn" onclick="go()">Verificar</button>
-  </div>
-
-  <div id="rarea"></div>
-  <div id="harea"></div>
-
-  <hr class="section-divider">
-  <div class="section-header">
-    <div class="section-title">
-      🛵 Entregas do dia
-      <span class="count-badge" id="count-badge">0</span>
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <span>A calcular rota...</span>
     </div>
-    <button class="btn-reset" onclick="confirmarReset()">↺ Novo dia</button>
+    <div class="error-msg" id="errorMsg"></div>
   </div>
-  <div id="deliveries-area"><div class="empty-state">Nenhuma entrega registada hoje</div></div>
-  <div id="summary-area"></div>
-</div>
 
-<div class="modal-overlay" id="modal">
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="result-icon" id="resultIcon"></div>
+      <div>
+        <div class="result-verdict" id="resultVerdict"></div>
+        <div class="result-address" id="resultAddress"></div>
+      </div>
+    </div>
+    <div class="result-grid" id="resultGrid"></div>
+    <div id="rejectedMsg" class="rejected-msg" style="display:none"></div>
+    <div class="result-footer" id="resultFooter"></div>
+  </div>
+
+  <div class="deliveries-section" id="deliveriesSection">
+    <div class="section-header">
+      <span class="section-title">Entregas do dia</span>
+      <span class="count-badge" id="countBadge">0</span>
+    </div>
+    <div class="summary-bar" id="summaryBar" style="display:none"></div>
+    <div id="deliveriesList">
+      <div class="empty-state">
+        <span class="empty-icon">🛵</span>
+        <div class="empty-text">Nenhuma entrega registada hoje</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="newDayModal">
   <div class="modal">
-    <h3>Iniciar novo dia?</h3>
-    <p>Todos os registos actuais serão apagados da app. Os dados já gravados na Google Sheet mantêm-se.</p>
-    <div class="modal-btns">
-      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-confirmar" onclick="resetDia()">Confirmar</button>
+    <div class="modal-title">Iniciar novo dia?</div>
+    <div class="modal-body">Todos os registos actuais serão apagados da app. Os dados já gravados na Google Sheet mantêm-se.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('newDayModal')">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmNewDay()">Confirmar</button>
     </div>
   </div>
 </div>
 
 <script>
-const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjViMmMwYTBlNDJjNTQ3NjI4MTI0ODYwNTYwODVjYTM2IiwiaCI6Im11cm11cjY0In0=';
-const GKEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
+const GOOGLE_KEY = 'AIzaSyBuy18y21jYO0BamdcFVxMprg7gc_DilyQ';
+const ORS_KEY    = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjViMmMwYTBlNDJjNTQ3NjI4MTI0ODYwNTYwODVjYTM2IiwiaCI6Im11cm11cjY0In0=';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkOFV8zsCSq8BhUQ50F1SA2nZK79OVTBFcIXQqDEz6f3hcVQlWSaAbzvWElIn_7nhY/exec';
-
-// Serviço esperado = (ida × 2) + 5 min
-const SERVICO_EXTRA = 5;
+const MAX_ROUND  = 20;
 
 const STORES = [
-  { name:'Parede', addrShort:'Largo José Fontana 66, Parede', addrFull:'Largo José Fontana 66, 2775-086 Parede, Cascais, Portugal', lat:38.692863, lng:-9.354782, schedule:'Seg-Sáb: 11:00-14:30 / 18:00-21:30 · Dom: Encerrado', closedDays:[0], lunch:['11:00','14:30'], dinner:['18:00','21:30'] },
-  { name:'Carcavelos', addrShort:'Av. de São Miguel 296, Carcavelos', addrFull:'Avenida de São Miguel 296, 2775-751 Carcavelos, Cascais, Portugal', lat:38.7020161, lng:-9.3350118, schedule:'Seg-Sex: 11:00-14:00 / 17:30-21:00 · Sáb: 11:00-14:30 · Dom: Encerrado', closedDays:[0], lunch:['11:00','14:00'], dinner:['17:30','21:00'] },
-  { name:'S. Domingos de Rana', addrShort:'Praça de Azurite 380A, S. D. Rana', addrFull:'Praça de Azurite 380, 2785-812 São Domingos de Rana, Cascais, Portugal', lat:38.7106936, lng:-9.3277964, schedule:'Ter-Sex: 11:00-14:00 / 18:00-21:00 · Seg/Sáb/Dom: Encerrado', closedDays:[0,1,6], lunch:['11:00','14:00'], dinner:['18:00','21:00'] }
+  { id: 'parede',     name: 'Parede',     addr: 'Largo José Fontana 66, Parede',      lat: 38.692863,  lng: -9.354782,  hours: [[12,15],[19,22.5]] },
+  { id: 'carcavelos', name: 'Carcavelos', addr: 'Av. de São Miguel 296, Carcavelos',  lat: 38.7020161, lng: -9.3350118, hours: [[12,15],[19,22.5]] },
+  { id: 'sdrana',     name: 'S. D. Rana', addr: 'Praça de Azurite 380, S. D. Rana',  lat: 38.7106936, lng: -9.3277964, hours: [[12,15],[19,22.5]] },
 ];
 
-let cur = 0, hist = [], deliveries = [];
+let activeStore = STORES[0];
+let lastResult  = null;
+let deliveries  = [];
 
-function toMin(t){ const [h,m]=t.split(':'); return +h*60+ +m; }
-function isOpen(s){ const n=new Date(), d=n.getDay(); if(s.closedDays.includes(d)) return false; const hm=n.getHours()*60+n.getMinutes(); return (hm>=toMin(s.lunch[0])&&hm<=toMin(s.lunch[1]))||(hm>=toMin(s.dinner[0])&&hm<=toMin(s.dinner[1])); }
-function nowISO(){ return new Date().toISOString(); }
-function nowHM(){ return new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}); }
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function servicoEsperado(ida){ return (ida * 2) + SERVICO_EXTRA; }
-function dataFormatada(iso){ return new Date(iso).toLocaleDateString('pt-PT',{weekday:'short',day:'2-digit',month:'2-digit'}); }
+function today() { return new Date().toISOString().slice(0,10); }
 
-function confirmarReset(){ document.getElementById('modal').classList.add('active'); }
-function fecharModal(){ document.getElementById('modal').classList.remove('active'); }
-function resetDia(){
-  deliveries=[]; hist=[];
-  saveLocal();
-  fecharModal();
-  document.getElementById('rarea').innerHTML='';
-  document.getElementById('harea').innerHTML='';
-  document.getElementById('ain').value='';
-  renderDeliveries();
+function isOpen(store) {
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+  return store.hours.some(([s,e]) => h >= s && h < e);
 }
 
-function renderCard(){
-  const s=STORES[cur], op=isOpen(s);
-  document.getElementById('scard').innerHTML=`<strong>${s.name}</strong><span class="badge ${op?'open':'closed'}">${op?'Aberto':'Fechado'}</span><br>${s.addrShort}<br><span style="font-size:11px">${s.schedule}</span>`;
-}
-function sel(i){
-  cur=i;
-  document.querySelectorAll('.tab').forEach((t,idx)=>t.className='tab'+(idx===i?' active':''));
-  renderCard();
-  document.getElementById('rarea').innerHTML='';
-  document.getElementById('ain').value='';
-}
-
-async function geocode(query){
-  const q=encodeURIComponent(query+(query.toLowerCase().includes('portugal')?'':', Portugal'));
-  const url=`https://corsproxy.io/?url=${encodeURIComponent('https://maps.googleapis.com/maps/api/geocode/json?address='+q+'&region=pt&key='+GKEY)}`;
-  const r=await fetch(url); const d=await r.json();
-  if(d.status!=='OK'||!d.results.length) return null;
-  const res=d.results[0];
-  return {lat:res.geometry.location.lat,lng:res.geometry.location.lng,label:res.formatted_address};
-}
-async function getRoute(fromLng,fromLat,toLng,toLat){
-  const url=`https://corsproxy.io/?url=${encodeURIComponent('https://api.openrouteservice.org/v2/directions/driving-car')}`;
-  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':ORS_KEY},body:JSON.stringify({coordinates:[[fromLng,fromLat],[toLng,toLat]]})});
-  const d=await r.json();
-  if(!d.routes||!d.routes.length) return null;
-  return {distM:d.routes[0].summary.distance,durSec:d.routes[0].summary.duration};
-}
-
-async function go(){
-  const input=document.getElementById('ain').value.trim();
-  if(!input) return;
-  const btn=document.getElementById('gbtn');
-  btn.disabled=true;
-  document.getElementById('rarea').innerHTML='<div class="loading">A calcular rota em tempo real...</div>';
+function loadLocal() {
   try {
-    const store=STORES[cur];
-    const dest=await geocode(input);
-    if(!dest){ document.getElementById('rarea').innerHTML='<div class="err">Morada não encontrada. Tente incluir a localidade.</div>'; btn.disabled=false; return; }
-    const route=await getRoute(store.lng,store.lat,dest.lng,dest.lat);
-    if(!route){ document.getElementById('rarea').innerHTML='<div class="err">Não foi possível calcular a rota. Tente novamente.</div>'; btn.disabled=false; return; }
-    const distKm=(route.distM/1000).toFixed(1);
-    const durOW=Math.ceil(route.durSec/60);
-    const durRT=durOW*2;
-    const ok=durRT<=20;
-    const mapsUrl=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(store.addrFull)}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
-    hist.unshift({addr:dest.label.split(',').slice(0,2).join(','),ok,ts:nowHM()});
-    if(hist.length>6) hist.pop();
-    renderResult(dest,distKm,durOW,durRT,ok,mapsUrl,store);
-    renderHist();
-  } catch(e){
-    document.getElementById('rarea').innerHTML='<div class="err">Erro de ligação. Verifique a internet e tente novamente.</div>';
-  }
-  btn.disabled=false;
-}
-
-function renderResult(dest,dist,ow,rt,ok,murl,store){
-  const esp=servicoEsperado(ow);
-  const fee=ok?`<div class="fee-row"><span class="fee-l">Taxa de entrega (IVA incl.)</span><span class="fee-v">2,50 €</span></div>`:'';
-  const servicoRow=ok?`<div class="fee-row"><span class="fee-l">⏱ Serviço esperado <span style="font-size:11px;color:#aaa">(ida×2 + 5 min)</span></span><span class="fee-v" style="color:#1a1a1a">${esp} min</span></div>`:'';
-  const note=ok?'':`<div class="rnote">Informar o cliente: "Lamentamos, mas a sua morada está fora da nossa zona de entrega. Pode recolher na loja ou encomendar via plataforma."</div>`;
-  const moradaEsc=dest.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const murlEsc=murl.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const saidaBtn=ok?`<button class="btn-saida" id="btn-saida-main" onclick="registarSaida(this,'${moradaEsc}',${ow},'${store.name}','${murlEsc}')">🛵 Saí para entrega</button>`:'';
-  document.getElementById('rarea').innerHTML=`
-    <div class="result ${ok?'r-ok':'r-no'}">
-      <div class="r-title">${ok?'✓ Entrega aceite':'✕ Fora do raio de entrega'}</div>
-      <div class="r-sub">${dest.label}</div>
-      <div class="stats">
-        <div class="stat"><div class="slabel">Distância</div><div class="sval">${dist} km</div></div>
-        <div class="stat"><div class="slabel">Ida</div><div class="sval">${ow} min</div></div>
-        <div class="stat"><div class="slabel">Ida + volta</div><div class="sval" style="color:${ok?'#3B6D11':'#A32D2D'}">${rt} min</div></div>
-      </div>
-      ${fee}${servicoRow}${note}
-      <a class="mlink" href="${murl}" target="_blank">Ver rota no Google Maps ↗</a>
-      ${saidaBtn}
-    </div>`;
-}
-
-async function registarSaida(btn,morada,ida,loja,murl){
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span>A registar...';
-  const id=uid(), hora_saida=nowISO(), esperado=servicoEsperado(ida);
-  try {
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'saida',id,loja,morada,ida,esperado,hora_saida})});
-  } catch(e){}
-  deliveries.unshift({id,loja,morada,ida,esperado,hora_saida,hora_chegada:null,real:null,murl});
-  saveLocal();
-  renderDeliveries();
-  const btnEl=document.getElementById('btn-saida-main');
-  if(btnEl) btnEl.outerHTML=`<div style="text-align:center;font-size:13px;color:#3B6D11;font-weight:600;padding:8px 0;">✓ Saída registada às ${nowHM()}</div>`;
-}
-
-async function registarChegada(id,btn){
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span>A registar...';
-  const hora_chegada=nowISO();
-  try {
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'chegada',id,hora_chegada})});
-  } catch(e){}
-  const d=deliveries.find(x=>x.id===id);
-  if(d){
-    d.hora_chegada=hora_chegada;
-    d.real=Math.round((new Date(hora_chegada)-new Date(d.hora_saida))/60000);
-  }
-  saveLocal();
-  renderDeliveries();
-}
-
-function saveLocal(){
-  try { localStorage.setItem('ogr_deliveries',JSON.stringify(deliveries)); } catch(e){}
-}
-function loadLocal(){
-  try {
-    const raw=localStorage.getItem('ogr_deliveries');
-    if(!raw) return;
-    const all=JSON.parse(raw);
-    const hoje=new Date().toDateString();
-    // Filtra só hoje E com fórmula correcta (esperado = ida×2+5)
-    deliveries=all.filter(d=>{
-      if(!d.hora_saida || !d.ida) return false;
-      if(new Date(d.hora_saida).toDateString()!==hoje) return false;
-      // Recalcula esperado com fórmula actual para corrigir registos antigos
-      d.esperado = servicoEsperado(d.ida);
-      return true;
+    const raw = localStorage.getItem('grelhados_v3');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.date !== today()) return;
+    deliveries = (data.deliveries || []).map(d => {
+      if (!d.expected) d.expected = calcExpected(d.one_way);
+      return d;
     });
-  } catch(e){}
+    activeStore = STORES.find(s => s.id === data.storeId) || STORES[0];
+  } catch(e) {}
 }
 
-function renderDeliveries(){
-  const area=document.getElementById('deliveries-area');
-  document.getElementById('count-badge').textContent=deliveries.length;
-  if(!deliveries.length){
-    area.innerHTML='<div class="empty-state">Nenhuma entrega registada hoje</div>';
-    document.getElementById('summary-area').innerHTML='';
+function saveLocal() {
+  localStorage.setItem('grelhados_v3', JSON.stringify({
+    date: today(), storeId: activeStore.id, deliveries
+  }));
+}
+
+function calcExpected(oneWay) { return Math.round(oneWay * 2 + 5); }
+
+function renderNav() {
+  document.getElementById('storeNav').innerHTML = STORES.map(s => `
+    <button class="store-tab ${s.id===activeStore.id?'active':''} ${isOpen(s)?'open-store':'closed-store'}"
+      onclick="selectStore('${s.id}')">${s.name}<span class="store-status"></span></button>
+  `).join('');
+}
+
+function renderStoreInfo() {
+  const open = isOpen(activeStore);
+  document.getElementById('storeInfo').innerHTML = `
+    <span class="status-pill ${open?'open':'closed'}">${open?'Aberto':'Fechado'}</span>
+    <span class="address-text">${activeStore.addr}</span>
+  `;
+}
+
+function selectStore(id) {
+  activeStore = STORES.find(s => s.id === id);
+  document.getElementById('resultCard').classList.remove('visible');
+  lastResult = null;
+  renderNav(); renderStoreInfo(); renderDeliveries();
+}
+
+async function verify() {
+  const addr = document.getElementById('addressInput').value.trim();
+  if (!addr) return;
+  setLoading(true); hideResult(); clearError();
+  try {
+    const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addr)}&key=${GOOGLE_KEY}`;
+    const geoRes = await fetch(geoUrl);
+    const geoData = await geoRes.json();
+    if (!geoData.results?.length) throw new Error('Morada não encontrada. Tenta com código postal.');
+    const { lat, lng } = geoData.results[0].geometry.location;
+    const formattedAddr = geoData.results[0].formatted_address;
+
+    const orsUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${activeStore.lng},${activeStore.lat}&end=${lng},${lat}`;
+    const orsRes = await fetch(orsUrl);
+    const orsData = await orsRes.json();
+    if (!orsData.features?.length) throw new Error('Não foi possível calcular a rota.');
+
+    const seg = orsData.features[0].properties.segments[0];
+    const oneWayMin = seg.duration / 60;
+    const roundMin  = oneWayMin * 2;
+    const distKm    = seg.distance / 1000;
+    const accepted  = roundMin <= MAX_ROUND;
+    const expected  = calcExpected(oneWayMin);
+
+    lastResult = { addr: formattedAddr, lat, lng, oneWayMin, roundMin, distKm, accepted, expected };
+    showResult(lastResult);
+  } catch(e) {
+    showError(e.message || 'Erro ao verificar entrega.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function showResult(r) {
+  const card = document.getElementById('resultCard');
+  card.className = `result-card visible ${r.accepted?'accepted':'rejected'}`;
+  document.getElementById('resultIcon').textContent = r.accepted ? '✓' : '✕';
+  document.getElementById('resultVerdict').textContent = r.accepted ? 'Aceite — 2,50 €' : 'Recusado';
+  document.getElementById('resultAddress').textContent = r.addr;
+
+  document.getElementById('resultGrid').innerHTML = `
+    <div class="metric"><div class="metric-label">Distância</div><div class="metric-value highlight">${r.distKm.toFixed(1)}</div><div class="metric-unit">km até cliente</div></div>
+    <div class="metric"><div class="metric-label">Ida</div><div class="metric-value">${Math.round(r.oneWayMin)}</div><div class="metric-unit">minutos</div></div>
+    <div class="metric"><div class="metric-label">Ida + volta</div><div class="metric-value">${Math.round(r.roundMin)}</div><div class="metric-unit">min — limite 20</div></div>
+    <div class="metric"><div class="metric-label">Serviço esperado</div><div class="metric-value highlight">${r.expected}</div><div class="metric-unit">min (ida×2 + 5)</div></div>
+  `;
+
+  const rejMsg = document.getElementById('rejectedMsg');
+  if (!r.accepted) {
+    rejMsg.style.display = 'block';
+    rejMsg.textContent = `Fora da zona — ida+volta ${Math.round(r.roundMin)} min (máx. ${MAX_ROUND} min). Informa o cliente que a entrega não está disponível.`;
+  } else { rejMsg.style.display = 'none'; }
+
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${activeStore.lat},${activeStore.lng}&destination=${r.lat},${r.lng}&travelmode=driving`;
+  document.getElementById('resultFooter').innerHTML = `
+    <a class="btn-maps" href="${mapsUrl}" target="_blank">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Ver rota
+    </a>
+    ${r.accepted ? `<button class="btn-start-delivery" onclick="startDelivery()">🛵 Saí para entrega</button>` : ''}
+  `;
+}
+
+function hideResult() { document.getElementById('resultCard').classList.remove('visible'); }
+
+function startDelivery() {
+  if (!lastResult) return;
+  const d = {
+    id: Date.now(), store: activeStore.name, addr: lastResult.addr,
+    one_way: lastResult.oneWayMin, expected: lastResult.expected,
+    departed: new Date().toISOString(), arrived: null, real: null, desvio: null,
+  };
+  deliveries.push(d);
+  saveLocal(); postToSheet(d, 'start'); renderDeliveries();
+  document.getElementById('resultCard').classList.remove('visible');
+  document.getElementById('addressInput').value = '';
+  lastResult = null;
+}
+
+function markReturn(id) {
+  const d = deliveries.find(x => x.id === id);
+  if (!d) return;
+  const now = new Date();
+  d.arrived = now.toISOString();
+  d.real = Math.round((now - new Date(d.departed)) / 60000);
+  d.desvio = d.real - d.expected;
+  saveLocal(); postToSheet(d, 'return'); renderDeliveries();
+}
+
+async function postToSheet(d, type) {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ loja: d.store, morada: d.addr, esperado: d.expected,
+        hora_saida: d.departed, hora_chegada: d.arrived||'', real: d.real??'', desvio: d.desvio??'', tipo: type }),
+    });
+  } catch(e) { console.warn('Sheet sync failed', e); }
+}
+
+function renderDeliveries() {
+  const todayStr = today();
+  const list = deliveries.filter(d => d.departed.startsWith(todayStr));
+  document.getElementById('countBadge').textContent = list.length;
+
+  const summaryBar = document.getElementById('summaryBar');
+  const el = document.getElementById('deliveriesList');
+
+  if (!list.length) {
+    summaryBar.style.display = 'none';
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">🛵</span><div class="empty-text">Nenhuma entrega registada hoje</div></div>`;
     return;
   }
-  area.innerHTML=deliveries.map(d=>{
-    const emCurso=!d.hora_chegada;
-    const horaSaida=new Date(d.hora_saida).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
-    const horaChegada=d.hora_chegada?new Date(d.hora_chegada).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}):'—';
-    const dataEntrega=dataFormatada(d.hora_saida);
-    let desvioHtml='<span style="color:#bbb">—</span>';
-    if(d.real!==null){
-      const dev=d.real-d.esperado;
-      const sign=dev>0?'+':'';
-      desvioHtml=dev<=0
-        ?`<span class="dc-desvio-neg">${sign}${dev} min ✓</span>`
-        :`<span class="dc-desvio-pos">+${dev} min ⚠</span>`;
-    }
-    const chegadaBtn=emCurso?`<button class="btn-chegada" onclick="registarChegada('${d.id}',this)">✓ Regressei à loja</button>`:'';
-    const enderecoShort=d.morada.split(',').slice(0,2).join(',');
-    return `
-      <div class="delivery-card">
-        <div class="dc-header">
-          <div class="dc-addr">${enderecoShort}</div>
-          <div class="dc-status ${emCurso?'status-em-curso':'status-entregue'}">${emCurso?'Em curso':'Concluída'}</div>
+
+  const done = list.filter(d => d.real !== null);
+  if (done.length) {
+    const avgExp  = Math.round(done.reduce((s,d)=>s+d.expected,0)/done.length);
+    const avgReal = Math.round(done.reduce((s,d)=>s+d.real,0)/done.length);
+    const avgDev  = Math.round(done.reduce((s,d)=>s+d.desvio,0)/done.length);
+    summaryBar.style.display = 'grid';
+    summaryBar.innerHTML = `
+      <div class="summary-item"><div class="summary-num">${avgExp}m</div><div class="summary-lbl">Esp. médio</div></div>
+      <div class="summary-item"><div class="summary-num">${avgReal}m</div><div class="summary-lbl">Real médio</div></div>
+      <div class="summary-item"><div class="summary-num ${avgDev<=0?'positive':'negative'}">${avgDev>0?'+':''}${avgDev}m</div><div class="summary-lbl">Desvio médio</div></div>
+    `;
+  } else { summaryBar.style.display = 'none'; }
+
+  el.innerHTML = list.map((d,i) => {
+    const depStr = new Date(d.departed).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+    if (d.real !== null) {
+      const arrStr = new Date(d.arrived).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="delivery-item">
+        <div class="delivery-top">
+          <div class="delivery-num">${i+1}</div>
+          <div class="delivery-info"><div class="delivery-addr">${d.addr}</div><div class="delivery-meta">${d.store} — esp. ${d.expected}m</div></div>
+          <span class="delivery-status ${d.desvio<=0?'status-done':'status-late'}">${d.desvio<=0?'Concluída ✓':'Atrasada ⚠'}</span>
         </div>
-        <div class="dc-date">📅 ${dataEntrega} · ${d.loja}</div>
-        <div class="dc-meta">
-          <div class="dc-meta-item"><div class="dc-meta-label">Saída</div><div class="dc-meta-val">${horaSaida}</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Regresso</div><div class="dc-meta-val">${horaChegada}</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Ida (ORS)</div><div class="dc-meta-val">${d.ida} min</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Serviço esperado</div><div class="dc-meta-val">${d.esperado} min</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Real (total)</div><div class="dc-meta-val">${d.real!==null?d.real+' min':'—'}</div></div>
-          <div class="dc-meta-item"><div class="dc-meta-label">Desvio</div><div class="dc-meta-val">${desvioHtml}</div></div>
+        <div class="delivery-bottom">
+          <span class="time-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${depStr} — ${arrStr}</span>
+          <span class="desvio-chip ${d.desvio<=0?'desvio-ok':'desvio-late'}">${d.desvio>0?'+':''}${d.desvio}m</span>
         </div>
-        ${chegadaBtn}
       </div>`;
+    } else {
+      return `<div class="delivery-item">
+        <div class="delivery-top">
+          <div class="delivery-num">${i+1}</div>
+          <div class="delivery-info"><div class="delivery-addr">${d.addr}</div><div class="delivery-meta">${d.store} — esp. ${d.expected}m</div></div>
+          <span class="delivery-status status-active">Em curso</span>
+        </div>
+        <div class="delivery-bottom">
+          <span class="time-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Saída ${depStr}</span>
+          <button class="btn-return" onclick="markReturn(${d.id})">✓ Regressei</button>
+        </div>
+      </div>`;
+    }
   }).join('');
-  renderSummary();
 }
 
-function renderSummary(){
-  const concluidas=deliveries.filter(d=>d.real!==null);
-  if(!concluidas.length){ document.getElementById('summary-area').innerHTML=''; return; }
-  const mediaReal=Math.round(concluidas.reduce((s,d)=>s+d.real,0)/concluidas.length);
-  const mediaEsp=Math.round(concluidas.reduce((s,d)=>s+d.esperado,0)/concluidas.length);
-  const mediaDesvio=Math.round(concluidas.reduce((s,d)=>s+(d.real-d.esperado),0)/concluidas.length);
-  const sign=mediaDesvio>0?'+':'';
-  const desvioColor=mediaDesvio>0?'#A32D2D':'#3B6D11';
-  document.getElementById('summary-area').innerHTML=`
-    <div class="summary-box">
-      <div class="htitle" style="margin-bottom:10px">Resumo do dia — ${concluidas.length} entrega${concluidas.length>1?'s':''} concluída${concluidas.length>1?'s':''}</div>
-      <div class="summary-grid">
-        <div class="summary-item"><div class="summary-label">Serviço esperado médio</div><div class="summary-val">${mediaEsp} min</div></div>
-        <div class="summary-item"><div class="summary-label">Tempo real médio</div><div class="summary-val orange">${mediaReal} min</div></div>
-        <div class="summary-item"><div class="summary-label">Desvio médio</div><div class="summary-val" style="color:${desvioColor}">${sign}${mediaDesvio} min</div></div>
-      </div>
-    </div>`;
+function setLoading(on) {
+  document.getElementById('loader').classList.toggle('visible', on);
+  document.getElementById('btnVerify').disabled = on;
+}
+function showError(msg) { const e=document.getElementById('errorMsg'); e.textContent=msg; e.classList.add('visible'); }
+function clearError() { document.getElementById('errorMsg').classList.remove('visible'); }
+function openNewDayModal() { document.getElementById('newDayModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function confirmNewDay() {
+  localStorage.removeItem('grelhados_v3'); deliveries = [];
+  closeModal('newDayModal');
+  document.getElementById('resultCard').classList.remove('visible');
+  document.getElementById('addressInput').value = '';
+  lastResult = null; renderDeliveries();
+}
+function updateDate() {
+  document.getElementById('dateBadge').textContent = new Date().toLocaleDateString('pt-PT',{weekday:'short',day:'numeric',month:'short'});
 }
 
-function renderHist(){
-  if(!hist.length){ document.getElementById('harea').innerHTML=''; return; }
-  document.getElementById('harea').innerHTML=`<div class="hist" style="margin-bottom:0.5rem"><div class="htitle">Consultas recentes</div>${hist.map(h=>`<div class="hitem"><div class="hdot ${h.ok?'ok':'no'}"></div><div class="haddr">${h.addr}</div><div class="hts">${h.ts}</div></div>`).join('')}</div>`;
-}
-
-loadLocal();
-renderCard();
-renderDeliveries();
+loadLocal(); updateDate(); renderNav(); renderStoreInfo(); renderDeliveries();
+setInterval(() => { renderNav(); renderStoreInfo(); }, 60000);
 </script>
 </body>
 </html>
